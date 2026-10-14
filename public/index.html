@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🧬 رحلة التكاثر - السودان 2026</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f2846">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;font-family:'Tahoma','Arial',sans-serif;}
+html,body{height:100%;background:linear-gradient(135deg,#0a1a2e 0%,#0f2846 25%,#163a5f 50%,#1a4a6e 75%,#0f2846 100%);overflow:hidden;color:#fff;position:relative;}
+html::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle at 15% 25%, rgba(100,200,255,.10) 0%, transparent 8%),radial-gradient(circle at 85% 40%, rgba(126,211,33,.08) 0%, transparent 6%),radial-gradient(circle at 40% 75%, rgba(100,200,255,.06) 0%, transparent 7%),radial-gradient(circle at 65% 15%, rgba(126,211,33,.05) 0%, transparent 5%),radial-gradient(circle at 25% 90%, rgba(100,200,255,.07) 0%, transparent 6%),radial-gradient(circle at 75% 85%, rgba(255,215,0,.05) 0%, transparent 4%),radial-gradient(circle at 90% 10%, rgba(100,200,255,.06) 0%, transparent 5%);background-size:500px 500px,600px 600px,450px 450px,550px 550px,650px 650px,400px 400px,700px 700px;animation:bioFloat 25s ease-in-out infinite;pointer-events:none;z-index:0;}
+@keyframes bioFloat{0%,100%{transform:translate(0,0) rotate(0deg);}33%{transform:translate(15px,-10px) rotate(1deg);}66%{transform:translate(-15px,10px) rotate(-1deg);}}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;padding:12px;overflow-y:auto;z-index:1;}
+.screen.active{display:flex;animation:screenIn .35s ease-out;}
+@keyframes screenIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.screen.slide-right.active{animation:slideRight .35s ease-out;}
+@keyframes slideRight{from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);}}
+.screen.zoom-in.active{animation:zoomIn .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes zoomIn{from{opacity:0;transform:scale(.85);}to{opacity:1;transform:scale(1);}}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+@keyframes pop{0%{transform:scale(1);}50%{transform:scale(1.05);}100%{transform:scale(1);}}
+@keyframes shake{0%,100%{transform:translateX(0);}20%,60%{transform:translateX(-6px);}40%,80%{transform:translateX(6px);}}
+@keyframes glow{0%,100%{box-shadow:0 4px 14px rgba(255,215,0,.5);}50%{box-shadow:0 4px 24px rgba(255,215,0,.9);}}
+@keyframes trophyPop{0%{transform:scale(0) rotate(-180deg);}60%{transform:scale(1.3) rotate(10deg);}100%{transform:scale(1) rotate(0);}}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg);}}
+@keyframes dashFlow{to{stroke-dashoffset:-600;}}
+@keyframes pulseAnim{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+#splash{justify-content:center;align-items:center;text-align:center;background:linear-gradient(160deg,rgba(10,26,46,.92),rgba(15,40,70,.85));}
+#splash .logo{font-size:80px;margin-bottom:5px;animation:float 3s ease-in-out infinite;}
+#splash h1{font-size:28px;color:#ffd700;margin:5px 0;text-shadow:0 3px 12px rgba(255,215,0,.5);cursor:pointer;font-weight:900;}
+#splash h2{font-size:13px;color:#7ed321;margin:3px 0;font-weight:normal;}
+#splash .subtitle{font-size:12px;color:#bbb;margin-top:8px;line-height:1.7;}
+.user-bar{margin-top:10px;background:linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,.05));padding:10px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.15);max-width:320px;width:100%;}
+.user-bar .user-name{font-size:14px;font-weight:bold;color:#ffd700;}
+.user-bar .user-level{font-size:12px;color:#7ed321;margin-top:2px;}
+.user-bar .user-badges{font-size:16px;margin-top:4px;letter-spacing:2px;}
+.user-bar .user-streak{font-size:11px;color:#ff9800;margin-top:4px;}
+.menu-btns{margin-top:16px;display:flex;flex-direction:column;gap:8px;width:100%;max-width:320px;}
+.btn{padding:13px 22px;font-size:14px;font-weight:bold;border:none;border-radius:14px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3);transition:transform .15s;color:#fff;font-family:inherit;position:relative;}
+.btn:active{transform:scale(.95);}
+.btn-green{background:linear-gradient(135deg,#4CAF50,#2e7d32);}
+.btn-blue{background:linear-gradient(135deg,#1a5490,#0d3d6e);}
+.btn-purple{background:linear-gradient(135deg,#9c27b0,#6a1b9a);}
+.btn-gold{background:linear-gradient(135deg,#FFA500,#e65100);}
+.btn-red{background:linear-gradient(135deg,#d32f2f,#b71c1c);}
+.btn-teal{background:linear-gradient(135deg,#00897b,#00695c);}
+.btn-pink{background:linear-gradient(135deg,#e91e63,#ad1457);}
+.btn-cyan{background:linear-gradient(135deg,#00bcd4,#0097a7);}
+.btn-small{padding:9px 16px;font-size:12px;}
+.btn-daily{background:linear-gradient(135deg,#ffd700,#ff6f00);box-shadow:0 4px 14px rgba(255,215,0,.5);animation:glow 2s ease-in-out infinite;}
+.ctrl-btns{position:fixed;top:10px;right:10px;display:flex;gap:6px;z-index:200;}
+.ctrl-btn{background:rgba(255,255,255,.2);backdrop-filter:blur(10px);color:#fff;border:1px solid rgba(255,255,255,.3);width:38px;height:38px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.ctrl-btn.active{background:linear-gradient(135deg,#ffd700,#ff9800);color:#333;}
