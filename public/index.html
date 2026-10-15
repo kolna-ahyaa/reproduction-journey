@@ -1446,3 +1446,451 @@ function clearErrors(){
     showToast('🗑️ تم الحذف');
   }
   }
+
+/* ============ 15. الشارات ============ */
+const BADGES=[
+{id:'first_step',icon:'🎯',name:'الخطوة الأولى',desc:'أكملت مرحلة',check:function(){return totalCompletedStages()>=1;}},
+{id:'state_master',icon:'🗺️',name:'فاتح ولاية',desc:'أكملت ولاية',check:function(){return Object.values(progress.completed).some(function(arr){return arr.length>=19;});}},
+{id:'score_100',icon:'💯',name:'مئة نقطة',desc:'100 نقطة',check:function(){return (progress.totalScore||0)>=100;}},
+{id:'score_500',icon:'🏅',name:'خمسمئة',desc:'500 نقطة',check:function(){return (progress.totalScore||0)>=500;}},
+{id:'three_states',icon:'👑',name:'ثلاث ولايات',desc:'3 ولايات',check:function(){return countCompletedStates()>=3;}},
+{id:'five_states',icon:'🌟',name:'خمس ولايات',desc:'5 ولايات',check:function(){return countCompletedStates()>=5;}},
+{id:'streak_3',icon:'🔥',name:'مثابر',desc:'3 أيام',check:function(){return getStreak()>=3;}},
+{id:'streak_7',icon:'⚡',name:'أسبوع كامل',desc:'7 أيام',check:function(){return getStreak()>=7;}},
+{id:'no_mistakes',icon:'💎',name:'بلا أخطاء',desc:'10 صح متتال',check:function(){return (counters.noMistake||0)>=10;}},
+{id:'mix_master',icon:'🎯',name:'خبير الكلمات',desc:'10 كلمات',check:function(){return (counters.mixCorrect||0)>=10;}},
+{id:'why_master',icon:'🤔',name:'عالم العلل',desc:'10 علل',check:function(){return (counters.whyCorrect||0)>=10;}},
+{id:'tf_master',icon:'✅',name:'خبير صح/خطأ',desc:'10 صح/خطأ',check:function(){return (counters.tfCorrect||0)>=10;}},
+{id:'order_master',icon:'🔢',name:'ملك الترتيب',desc:'10 ترتيب',check:function(){return (counters.orderCorrect||0)>=10;}},
+{id:'quick_50',icon:'⚡',name:'تحدي 50',desc:'أكملت التحدي',check:function(){return (counters.quickDone||false)===true;}},
+{id:'all_states',icon:'🏆',name:'أسطورة الأحياء',desc:'كل الولايات',check:function(){return countCompletedStates()>=18;}},
+{id:'listener',icon:'📚',name:'طالب مجتهد',desc:'5 دروس',check:function(){return (counters.lessonsRead||0)>=5;}},
+{id:'reader_all',icon:'🎓',name:'قارئ كامل',desc:'10 دروس',check:function(){return (counters.lessonsRead||0)>=10;}}
+];
+
+/* ============ 16. المستويات ============ */
+const LEVELS=[
+{min:0,name:'مبتدئ',icon:'🐣',color:'#90A4AE'},
+{min:20,name:'متعلم',icon:'📚',color:'#4CAF50'},
+{min:50,name:'طالب مجتهد',icon:'✏️',color:'#03A9F4'},
+{min:100,name:'خبير الأحياء',icon:'🔬',color:'#9C27B0'},
+{min:200,name:'عالم صغير',icon:'🧪',color:'#FF9800'},
+{min:350,name:'باحث متميز',icon:'🎓',color:'#E91E63'},
+{min:500,name:'أسطورة الأحياء',icon:'👑',color:'#FFD700'},
+{min:1000,name:'بطل السودان',icon:'🇸🇩',color:'#00897B'}
+];
+
+function getLevel(score){
+  let current=LEVELS[0];
+  for(let i=0;i<LEVELS.length;i++){if(score>=LEVELS[i].min)current=LEVELS[i];}
+  return current;
+}
+function totalCompletedStages(){
+  let n=0;
+  Object.values(progress.completed).forEach(function(arr){n+=arr.length;});
+  return n;
+}
+function countCompletedStates(){
+  let n=0;
+  STATES.forEach(function(s){if((progress.completed[s.id]||[]).length>=s.stages)n++;});
+  return n;
+}
+function checkBadges(){
+  const unlocked=JSON.parse(localStorage.getItem(BADGES_KEY)||'[]');
+  const newBadges=[];
+  BADGES.forEach(function(b){
+    if(unlocked.indexOf(b.id)===-1&&b.check()){unlocked.push(b.id);newBadges.push(b);}
+  });
+  if(newBadges.length>0){
+    localStorage.setItem(BADGES_KEY,JSON.stringify(unlocked));
+    newBadges.forEach(function(b,i){
+      setTimeout(function(){soundBadge();showToast('🎖️ '+b.icon+' '+b.name);},i*1500);
+    });
+  }
+  return newBadges;
+}
+function showBadges(){
+  const unlocked=JSON.parse(localStorage.getItem(BADGES_KEY)||'[]');
+  const grid=document.getElementById('badgeGrid');
+  grid.innerHTML='';
+  BADGES.forEach(function(b){
+    const isU=unlocked.indexOf(b.id)!==-1;
+    const item=document.createElement('div');
+    item.className='badge-item'+(isU?'':' locked');
+    item.innerHTML='<span class="badge-icon">'+(isU?b.icon:'🔒')+'</span><div class="badge-name">'+b.name+'</div><div class="badge-desc">'+b.desc+'</div>';
+    grid.appendChild(item);
+  });
+  showScreen('badgesScreen');
+}
+function getBadgesString(){
+  const unlocked=JSON.parse(localStorage.getItem(BADGES_KEY)||'[]');
+  if(unlocked.length===0)return '-';
+  return unlocked.slice(0,6).map(function(id){
+    const b=BADGES.find(function(x){return x.id===id;});
+    return b?b.icon:'';
+  }).join(' ');
+}
+function updateUserBar(){
+  const name=localStorage.getItem(NAME_KEY)||'طالب جديد';
+  const level=getLevel(progress.totalScore||0);
+  const streak=getStreak();
+  document.getElementById('userName').textContent='👤 '+name;
+  document.getElementById('userLevel').innerHTML=level.icon+' <span style="color:'+level.color+'">'+level.name+'</span>';
+  document.getElementById('userBadges').textContent=getBadgesString()||'لا شارات';
+  document.getElementById('userStreak').textContent='🔥 سلسلة: '+streak+' يوم';
+}
+
+/* ============ 17. اللغة + التنقل ============ */
+function applyLang(){
+  document.documentElement.lang=lang;
+  document.documentElement.dir=lang==='ar'?'rtl':'ltr';
+  const keys=['splashTitle','splashSub1','splashSub2','splashDesc','btnStart','btnQuick','btnLB','btnLib','lblScore','lblBack','compTitle','btnMap','btnShare','lbTitle','btnHint','btnBack2','codeTitle','btnDailyBonus','btnError','btnBadges'];
+  keys.forEach(function(k){const el=document.getElementById(k);if(el)el.textContent=t(k);});
+  const sf=document.getElementById('splashFooter');if(sf)sf.innerHTML=t('splashFooter');
+  const bc=document.getElementById('btnCode');if(bc)bc.textContent=t('btnCode');
+  document.getElementById('langBtn').textContent=lang==='ar'?'EN':'AR';
+}
+function toggleLang(){
+  lang=lang==='ar'?'en':'ar';
+  localStorage.setItem('game_lang',lang);
+  applyLang();soundClick();
+  const active=document.querySelector('.screen.active');
+  if(active&&active.id==='mapScreen')renderMap();
+  if(active&&active.id==='stagesScreen')renderStages();
+  if(active&&active.id==='libraryScreen')renderLibrary();
+}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+}
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(function(){el.classList.remove('show');},2500);
+}
+
+let currentStateIndex=0;
+let currentStageIndex=0;
+let currentQuestions=[];
+let currentQuestionIndex=0;
+let hintUsed=false;
+let answered=false;
+
+function getStageType(globalNum){
+  if(globalNum%11===0)return 'order';
+  if(globalNum%7===0)return 'tf';
+  if(globalNum%5===0)return 'why';
+  if(globalNum%3===0)return 'mix';
+  return 'mcq';
+}
+function getStateQuestions(stateIdx){
+  const state=STATES[stateIdx];
+  const total=QUESTIONS.length;
+  const startOffset=((state.start-1)*7919+stateIdx*3571+104729)%total;
+  const result=[];
+  const used={};
+  for(let i=0;i<state.stages;i++){
+    let idx=(startOffset+i)%total;
+    let attempts=0;
+    while(used[idx]&&attempts<total){idx=(idx+1)%total;attempts++;}
+    used[idx]=true;
+    result.push({q:QUESTIONS[idx].q,o:QUESTIONS[idx].o,a:QUESTIONS[idx].a,idx:QUESTIONS[idx].idx});
+  }
+  return result;
+}
+
+/* ============ 18. Pan & Zoom ============ */
+let mapScale=1,mapX=0,mapY=0;
+let isDragging=false,startX=0,startY=0;
+let initialPinchDist=0,initialScale=1;
+let hasMoved=false;
+
+function applyMapTransform(){
+  const svg=document.getElementById('sudanSvg');
+  if(!svg)return;
+  svg.style.transform='translate('+mapX+'px,'+mapY+'px) scale('+mapScale+')';
+}
+function zoomMap(factor,cx,cy){
+  const w=document.getElementById('mapWrapper');
+  if(!w)return;
+  const rect=w.getBoundingClientRect();
+  cx=cx!==undefined?cx:rect.width/2;
+  cy=cy!==undefined?cy:rect.height/2;
+  const oldS=mapScale;
+  const newS=Math.min(4,Math.max(0.5,mapScale*factor));
+  const r=newS/mapScale;
+  mapX=cx-(cx-mapX)*r;
+  mapY=cy-(cy-mapY)*r;
+  mapScale=newS;
+  applyMapTransform();
+  if(newS>oldS)soundZoomIn();else soundZoomOut();
+}
+function resetMapView(){
+  mapScale=1;mapX=0;mapY=0;
+  applyMapTransform();
+  showToast('🎯 تم إعادة التعيين');
+}
+function focusOnState(stateIdx){
+  const w=document.getElementById('mapWrapper');
+  if(!w)return;
+  const state=STATES[stateIdx];
+  w.classList.add('zooming');
+  const rect=w.getBoundingClientRect();
+  const sf=2.2;
+  mapScale=sf;
+  mapX=rect.width/2-(state.x/1000)*rect.width*sf;
+  mapY=rect.height/2-(state.y/700)*rect.height*sf;
+  applyMapTransform();
+  soundZoomIn();
+  setTimeout(function(){w.classList.remove('zooming');},900);
+}
+function initMapPanZoom(){
+  const w=document.getElementById('mapWrapper');
+  if(!w)return;
+  w.addEventListener('touchstart',function(e){
+    if(e.touches.length===1){
+      isDragging=true;hasMoved=false;
+      startX=e.touches[0].clientX-mapX;
+      startY=e.touches[0].clientY-mapY;
+      w.classList.add('grabbing');
+    }else if(e.touches.length===2){
+      isDragging=false;
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      initialPinchDist=Math.sqrt(dx*dx+dy*dy);
+      initialScale=mapScale;
+    }
+  },{passive:true});
+  w.addEventListener('touchmove',function(e){
+    if(e.touches.length===1&&isDragging){
+      const nx=e.touches[0].clientX-startX;
+      const ny=e.touches[0].clientY-startY;
+      if(Math.abs(nx-mapX)>5||Math.abs(ny-mapY)>5)hasMoved=true;
+      mapX=nx;mapY=ny;applyMapTransform();
+    }else if(e.touches.length===2){
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(initialPinchDist>0){
+        const f=dist/initialPinchDist;
+        const nS=Math.min(4,Math.max(0.5,initialScale*f));
+        const rect=w.getBoundingClientRect();
+        const cx=(e.touches[0].clientX+e.touches[1].clientX)/2-rect.left;
+        const cy=(e.touches[0].clientY+e.touches[1].clientY)/2-rect.top;
+        const r=nS/mapScale;
+        mapX=cx-(cx-mapX)*r;
+        mapY=cy-(cy-mapY)*r;
+        mapScale=nS;
+        applyMapTransform();
+      }
+    }
+  },{passive:true});
+  w.addEventListener('touchend',function(){
+    isDragging=false;initialPinchDist=0;
+    w.classList.remove('grabbing');
+  });
+  w.addEventListener('click',function(e){
+    if(hasMoved){e.stopPropagation();hasMoved=false;}
+  },true);
+}
+
+/* ============ 19. رسم الخريطة ============ */
+function isStateUnlocked(idx){
+  if(idx<FREE_STATES)return true;
+  return progress.unlockedStates.indexOf(STATES[idx].id)!==-1;
+}
+function renderMap(){
+  const group=document.getElementById('statesGroup');
+  const pathGroup=document.getElementById('pathsGroup');
+  if(!group||!pathGroup)return;
+  group.innerHTML='';pathGroup.innerHTML='';
+  let completedCount=0,unlockedCount=FREE_STATES;
+  
+  for(let i=0;i<STATES.length-1;i++){
+    const s1=STATES[i],s2=STATES[i+1];
+    const midX=(s1.x+s2.x)/2,midY=(s1.y+s2.y)/2-25;
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d','M '+s1.x+','+s1.y+' Q '+midX+','+midY+' '+s2.x+','+s2.y);
+    path.setAttribute('class','connection-path');
+    path.setAttribute('stroke-linecap','round');
+    pathGroup.appendChild(path);
+  }
+  
+  STATES.forEach(function(state,idx){
+    const completedStages=progress.completed[state.id]||[];
+    const totalStages=state.stages;
+    const unlocked=isStateUnlocked(idx);
+    const liberated=completedStages.length>=totalStages;
+    let status='locked';
+    if(!unlocked)status='needs-code';
+    else if(liberated){status='completed';completedCount++;unlockedCount++;}
+    else if(completedStages.length>0){status='in-progress';unlockedCount++;}
+    else status='free';
+    
+    const r=44,cx=state.x,cy=state.y;
+    const isCurrent=(status==='in-progress'||(status==='free'&&idx===FREE_STATES));
+    
+    const shadow=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    shadow.setAttribute('cx',cx);shadow.setAttribute('cy',cy+5);shadow.setAttribute('r',r+2);
+    shadow.setAttribute('fill','rgba(0,0,0,0.35)');shadow.setAttribute('filter','url(#glow)');
+    group.appendChild(shadow);
+    
+    const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx',cx);circle.setAttribute('cy',cy);circle.setAttribute('r',r);
+    circle.setAttribute('class','state-circle '+status+(isCurrent?' pulse':''));
+    circle.style.cursor='pointer';
+    if(liberated){
+      circle.style.fill='#4a7c59';
+      circle.style.filter='drop-shadow(0 0 15px #7ed321)';
+    }
+    circle.addEventListener('click',function(){
+      if(hasMoved)return;
+      if(!unlocked){soundClick();showCodeEntry();showToast('🔒 تتطلب كود تفعيل');return;}
+      soundClick();focusOnState(idx);
+      setTimeout(function(){currentStateIndex=idx;renderStages();showScreen('stagesScreen');},700);
+    });
+    group.appendChild(circle);
+    
+    const ring=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    ring.setAttribute('cx',cx);ring.setAttribute('cy',cy);ring.setAttribute('r',r);
+    ring.setAttribute('fill','none');
+    ring.setAttribute('stroke',liberated?'#7ed321':'#fff');
+    ring.setAttribute('stroke-width',liberated?'4':'3');
+    ring.setAttribute('opacity','0.9');ring.setAttribute('pointer-events','none');
+    group.appendChild(ring);
+    
+    const hl=document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+    hl.setAttribute('cx',cx-12);hl.setAttribute('cy',cy-16);
+    hl.setAttribute('rx',r*0.4);hl.setAttribute('ry',r*0.25);
+    hl.setAttribute('fill','rgba(255,255,255,0.4)');hl.setAttribute('pointer-events','none');
+    group.appendChild(hl);
+    
+    const rt=document.createElementNS('http://www.w3.org/2000/svg','text');
+    rt.setAttribute('x',cx);rt.setAttribute('y',cy-8);
+    rt.setAttribute('text-anchor','middle');rt.setAttribute('font-size','12');
+    rt.setAttribute('font-weight','bold');rt.setAttribute('pointer-events','none');
+    rt.setAttribute('fill','#fff');rt.setAttribute('style','text-shadow:0 1px 2px rgba(0,0,0,0.7);');
+    rt.textContent=state.start+'-'+state.end;
+    group.appendChild(rt);
+    
+    const dn=lang==='ar'?state.name:state.en;
+    const words=dn.split(' ');
+    const nt=document.createElementNS('http://www.w3.org/2000/svg','text');
+    nt.setAttribute('x',cx);nt.setAttribute('text-anchor','middle');
+    nt.setAttribute('font-size','10');nt.setAttribute('font-weight','bold');
+    nt.setAttribute('pointer-events','none');nt.setAttribute('fill','#fff');
+    nt.setAttribute('style','text-shadow:0 1px 2px rgba(0,0,0,0.7);');
+    if(words.length>1){
+      const t1=document.createElementNS('http://www.w3.org/2000/svg','tspan');
+      t1.setAttribute('x',cx);t1.setAttribute('y',cy+6);t1.textContent=words[0];
+      const t2=document.createElementNS('http://www.w3.org/2000/svg','tspan');
+      t2.setAttribute('x',cx);t2.setAttribute('y',cy+18);t2.textContent=words.slice(1).join(' ');
+      nt.appendChild(t1);nt.appendChild(t2);
+    }else{nt.setAttribute('y',cy+10);nt.textContent=dn;}
+    group.appendChild(nt);
+    
+    if(liberated){
+      const st=document.createElementNS('http://www.w3.org/2000/svg','text');
+      st.setAttribute('x',cx+30);st.setAttribute('y',cy-30);
+      st.setAttribute('font-size','22');st.setAttribute('text-anchor','middle');
+      st.textContent='🌿';group.appendChild(st);
+    }
+    if(status==='needs-code'){
+      const lk=document.createElementNS('http://www.w3.org/2000/svg','text');
+      lk.setAttribute('x',cx);lk.setAttribute('y',cy+38);
+      lk.setAttribute('font-size','18');lk.setAttribute('text-anchor','middle');
+      lk.textContent='🔒';group.appendChild(lk);
+    }
+    if(isCurrent&&status!=='needs-code'&&!liberated){
+      const ar=document.createElementNS('http://www.w3.org/2000/svg','text');
+      ar.setAttribute('x',cx);ar.setAttribute('y',cy-r-14);
+      ar.setAttribute('font-size','24');ar.setAttribute('text-anchor','middle');
+      ar.textContent='👇';ar.setAttribute('class','pulse');group.appendChild(ar);
+    }
+  });
+  
+  document.getElementById('totalScore').textContent=progress.totalScore||0;
+  document.getElementById('completedCount').textContent=completedCount+'/18';
+  document.getElementById('unlockedCount').textContent=unlockedCount+'/18';
+}
+
+/* ============ 20. كاكي أخضر على الاسم ============ */
+function showStateAnnounce(stateName,type){
+  document.querySelectorAll('#gameState,#mixState,#stateTitle,#tfState,#orderState').forEach(function(el){el.classList.remove('state-name-khaki');});
+  if(type==='finish'){
+    setTimeout(function(){
+      document.querySelectorAll('#gameState,#mixState,#stateTitle,#tfState,#orderState').forEach(function(el){el.classList.add('state-name-khaki');});
+    },100);
+    playTone(523.25,.20,'triangle',0,.45);
+    playTone(659.25,.20,'triangle',.20,.45);
+    playTone(783.99,.20,'triangle',.40,.45);
+    playTone(1046.50,.40,'triangle',.60,.5);
+  }else{
+    playTone(440,.15,'triangle',0,.35);
+    playTone(523.25,.20,'triangle',.15,.35);
+  }
+}
+
+/* ============ 21. عرض المراحل ============ */
+function renderStages(){
+  const state=STATES[currentStateIndex];
+  const questions=getStateQuestions(currentStateIndex);
+  const completedStages=progress.completed[state.id]||[];
+  document.getElementById('stateTitle').textContent=(lang==='ar'?state.name:state.en)+' ('+state.start+'-'+state.end+')';
+  document.getElementById('stateScore').textContent=progress.totalScore||0;
+  const list=document.getElementById('stageList');
+  list.innerHTML='';
+  questions.forEach(function(q,i){
+    const btn=document.createElement('button');
+    btn.className='stage-btn';
+    const canPlay=(i===0)||completedStages.indexOf(i-1)!==-1;
+    const done=completedStages.indexOf(i)!==-1;
+    if(done)btn.classList.add('done');
+    else if(canPlay)btn.classList.add('current');
+    else btn.classList.add('locked');
+    const globalNum=state.start+i;
+    const type=getStageType(globalNum);
+    let icon='❓';
+    if(type==='mix')icon='🎯';
+    else if(type==='why')icon='🤔';
+    else if(type==='tf')icon='✅';
+    else if(type==='order')icon='🔢';
+    btn.innerHTML='<div class="stage-num-big">'+globalNum+'</div><div class="stage-type-icon">'+icon+'</div><div class="stage-local">('+(i+1)+'/'+state.stages+')</div>'+(done?'<div class="badge-done">✅</div>':'')+(!canPlay&&!done?'<div class="badge-lock">🔒</div>':'');
+    btn.onclick=function(){
+      if(btn.classList.contains('locked'))return;
+      soundClick();
+      if(type==='mix')startMixStage(i);
+      else if(type==='why')startWhyStage(i);
+      else if(type==='tf')startTFStage(i);
+      else if(type==='order')startOrderStage(i);
+      else startStage(i);
+    };
+    list.appendChild(btn);
+  });
+}
+
+/* ============ 22. أيقونة السؤال ============ */
+function getQuestionIcon(q){
+  const s=q.q;
+  if(s.indexOf('الأميبا')!==-1||s.indexOf('الانشطار')!==-1)return '🦠';
+  if(s.indexOf('الخميرة')!==-1||s.indexOf('التبرعم')!==-1)return '🍞';
+  if(s.indexOf('الهيدرا')!==-1)return '🪸';
+  if(s.indexOf('البلاناريا')!==-1||s.indexOf('التفتت')!==-1)return '🪱';
+  if(s.indexOf('الفطريات')!==-1||s.indexOf('الأبواغ')!==-1)return '🍄';
+  if(s.indexOf('الفراولة')!==-1||s.indexOf('الساق الجارية')!==-1)return '🍓';
+  if(s.indexOf('البطاطس')!==-1||s.indexOf('الدرنة')!==-1)return '🥔';
+  if(s.indexOf('البصل')!==-1||s.indexOf('البصلة')!==-1)return '🧅';
+  if(s.indexOf('النخيل')!==-1||s.indexOf('الفسائل')!==-1)return '🌴';
+  if(s.indexOf('الزنجبيل')!==-1||s.indexOf('الريزوم')!==-1)return '🫚';
+  if(s.indexOf('الزعفران')!==-1||s.indexOf('الكورمة')!==-1)return '🌷';
+  if(s.indexOf('الزهرية')!==-1||s.indexOf('التلقيح')!==-1||s.indexOf('الإخصاب')!==-1)return '🌸';
+  if(s.indexOf('العقل')!==-1||s.indexOf('التطعيم')!==-1||s.indexOf('الترقيد')!==-1)return '✂️';
+  if(s.indexOf('الجنسي')!==-1)return '👫';
+  if(s.indexOf('اللاجنسي')!==-1)return '🧬';
+  if(s.indexOf('مندل')!==-1||s.indexOf('الجين')!==-1||s.indexOf('الكروموسوم')!==-1)return '🧬';
+  if(s.indexOf('الحمل')!==-1||s.indexOf('الجنين')!==-1||s.indexOf('المشيمة')!==-1)return '👶';
+  if(s.indexOf('الطيور')!==-1)return '🐣';
+  if(s.indexOf('الأسماك')!==-1||s.indexOf('الضفدعة')!==-1)return '🐟';
+  if(s.indexOf('الفيروس')!==-1||s.indexOf('اللقاح')!==-1)return '🦠';
+  return '🧬';
+  }
