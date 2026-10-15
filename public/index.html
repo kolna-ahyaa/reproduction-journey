@@ -2428,3 +2428,391 @@ function launchConfetti(){
     box.appendChild(c);
   }
   }
+
+/* ============ 30. لوحة الصدارة ============ */
+function loadLeaderboard(){
+  try{const d=localStorage.getItem(LBK);if(d)return JSON.parse(d);}catch(e){}
+  return [];
+}
+function saveLeaderboard(lb){
+  try{localStorage.setItem(LBK,JSON.stringify(lb));}catch(e){}
+}
+function addToLeaderboard(name,score){
+  let lb=loadLeaderboard();
+  lb=lb.filter(function(e){return e.name!==name;});
+  lb.push({name:name,score:score,date:new Date().toISOString()});
+  lb.sort(function(a,b){return b.score-a.score;});
+  lb=lb.slice(0,10);
+  saveLeaderboard(lb);
+}
+function showLeaderboard(){
+  const lb=loadLeaderboard();
+  const list=document.getElementById('leaderboardList');
+  if(lb.length===0){
+    list.innerHTML='<div class="lb-empty">'+t('lbEmpty')+'</div>';
+  }else{
+    const m=['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'];
+    list.innerHTML=lb.map(function(e,i){
+      return '<div class="lb-row '+(i<3?'top'+(i+1):'')+'"><span class="lb-rank">'+m[i]+'</span><span class="lb-name">'+e.name+'</span><span class="lb-score">'+e.score+' ⭐</span></div>';
+    }).join('');
+  }
+  showScreen('leaderboardScreen');
+}
+function savePlayerName(){
+  const input=document.getElementById('playerNameInput');
+  if(input.value.trim()){
+    const n=input.value.trim().slice(0,20);
+    localStorage.setItem(NAME_KEY,n);
+    addToLeaderboard(n,progress.totalScore||0);
+    updateUserBar();
+  }
+  document.getElementById('nameModal').classList.remove('show');
+  showLeaderboard();
+}
+
+/* ============ 31. التحدي السريع ============ */
+let quickQuestions=[],quickIndex=0,quickCorrect=0,quickWrong=0;
+function showQuickChallenge(){
+  quickQuestions=[];
+  const all=QUESTIONS.slice();
+  for(let i=all.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    const t=all[i];all[i]=all[j];all[j]=t;
+  }
+  quickQuestions=all.slice(0,50);
+  quickIndex=0;quickCorrect=0;quickWrong=0;
+  renderQuickQuestion();
+  showScreen('quickScreen');
+}
+function renderQuickQuestion(){
+  if(quickIndex>=quickQuestions.length){showQuickResult();return;}
+  document.getElementById('quickProgress').textContent=quickIndex+'/50 | ✅ '+quickCorrect+' | ❌ '+quickWrong;
+  const q=quickQuestions[quickIndex];
+  const content=document.getElementById('quickContent');
+  content.innerHTML=
+    '<div style="font-size:48px;text-align:center;">'+getQuestionIcon(q)+'</div>'+
+    '<div style="font-size:15px;font-weight:bold;color:#1a5490;margin:12px 0;text-align:center;">'+q.q+'</div>'+
+    '<div id="quickOptions" style="display:flex;flex-direction:column;gap:8px;">'+
+    q.o.map(function(o,i){return '<button class="option-btn" onclick="checkQuickAnswer('+i+',this)">'+o+'</button>';}).join('')+
+    '</div><div id="quickFeedback" style="margin-top:10px;text-align:center;font-weight:bold;min-height:20px;"></div>';
+}
+function checkQuickAnswer(selected,btn){
+  const q=quickQuestions[quickIndex];
+  const all=document.querySelectorAll('#quickOptions .option-btn');
+  all.forEach(function(b){b.disabled=true;});
+  const fb=document.getElementById('quickFeedback');
+  if(selected===q.a){
+    btn.classList.add('correct');soundCorrect();
+    quickCorrect++;
+    fb.style.color='#4CAF50';fb.textContent='✅';
+  }else{
+    btn.classList.add('wrong');soundWrong();
+    all[q.a].classList.add('correct');
+    quickWrong++;
+    fb.style.color='#f44336';fb.textContent='❌';
+    saveError(q.q,q.o[q.a]);
+  }
+  setTimeout(function(){quickIndex++;renderQuickQuestion();},900);
+}
+function showQuickResult(){
+  const content=document.getElementById('quickContent');
+  const percent=Math.round((quickCorrect/50)*100);
+  let grade='';
+  if(percent>=90)grade='🏆 ممتاز!';
+  else if(percent>=75)grade='🥇 جيد جداً';
+  else if(percent>=60)grade='🥈 جيد';
+  else if(percent>=50)grade='🥉 مقبول';
+  else grade='📚 يحتاج مراجعة';
+  const points=quickCorrect*2;
+  progress.totalScore=(progress.totalScore||0)+points;
+  saveProgress();
+  counters.quickDone=true;saveCounters();
+  content.innerHTML=
+    '<div style="text-align:center;">'+
+    '<div style="font-size:56px;">'+(percent>=50?'🎉':'💪')+'</div>'+
+    '<h2 style="color:#4a148c;margin:10px 0;">'+grade+'</h2>'+
+    '<p>النتيجة: <b>'+quickCorrect+'/50</b></p>'+
+    '<p style="color:#4CAF50;">⭐ +'+points+' نقاط</p>'+
+    '<button class="btn btn-purple" style="margin-top:14px;width:100%;" onclick="showScreen(\'splash\')">🏠 العودة</button>'+
+    '<button class="btn btn-gold" style="margin-top:8px;width:100%;" onclick="showQuickChallenge()">🔄 جديد</button>'+
+    '</div>';
+  document.getElementById('quickProgress').textContent='انتهى! '+quickCorrect+'/50';
+  checkBadges();
+}
+
+/* ============ 32. الدروس - بداية المصفوفة ============ */
+const LESSONS=[
+{
+title:'1️⃣ التكاثر - سر استمرار الحياة',
+tag:'أساسيات',
+summary:'قصة + رسم SVG + 3 تجارب + مشروع ربح 23,000 جنيه.',
+image:'https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Sexual_reproduction.svg/500px-Sexual_reproduction.svg.png',
+full:`
+<h3>🎯 قصة المدخل</h3>
+<p>في قرية صغيرة على ضفاف النيل، كان جدّي يزرع النخيل. سألته: "كيف صار عندنا كل هذا النخيل؟ لم نشتِ فسيلة واحدة منذ 30 سنة!" ابتسم وقال: "الفسائل التي تنمو حول النخلة الأم صارت نخيلاً جديداً. هذه هدية الله للإنسان: كل كائن قادر على إنتاج نسخة من نفسه، وإلا انقرضت الحياة".</p>
+<p><b>التكاثر</b> هو العملية الحيوية التي يُنتج بها الكائن أفراداً جديدة تحمل صفاته، فيضمن استمرار النوع.</p>
+
+<h3>🗺️ خريطة المفاهيم</h3>
+<div class="concept-map">
+<h4>🌳 شجرة التكاثر</h4>
+<div class="node"><span class="icon">🧬</span><span>التكاثر = إنتاج أفراد جدد</span></div>
+<div class="node"><span class="icon">🟦</span><span>لاجنسي: فرد واحد يكفي</span></div>
+<div class="node"><span class="icon">🟩</span><span>جنسي: ذكر + أنثى</span></div>
+<div class="node"><span class="icon">🎯</span><span>الهدف: استمرار النوع + نقل الصفات</span></div>
+</div>
+
+<h3>🖼️ رسم توضيحي</h3>
+<svg class="lesson-svg" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="arrowHead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+<path d="M0,0 L6,3 L0,6 Z" fill="#333"/>
+</marker>
+</defs>
+<text x="200" y="20" text-anchor="middle" fill="#1a5490" font-size="14" font-weight="bold">مخطط التكاثر</text>
+<ellipse cx="100" cy="90" rx="55" ry="35" fill="#bbdefb" stroke="#1a5490" stroke-width="2"/>
+<text x="100" y="85" text-anchor="middle" fill="#1a5490" font-size="12" font-weight="bold">كائن حي</text>
+<text x="100" y="100" text-anchor="middle" fill="#333" font-size="10">(خلية واحدة أو أكثر)</text>
+<line x1="155" y1="90" x2="220" y2="65" stroke="#333" stroke-width="2" marker-end="url(#arrowHead)"/>
+<line x1="155" y1="90" x2="220" y2="115" stroke="#333" stroke-width="2" marker-end="url(#arrowHead)"/>
+<rect x="225" y="40" width="90" height="50" rx="10" fill="#4CAF50"/>
+<text x="270" y="60" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">لاجنسي</text>
+<text x="270" y="78" text-anchor="middle" fill="#fff" font-size="9">فرد واحد يكفي</text>
+<rect x="225" y="100" width="90" height="50" rx="10" fill="#2196F3"/>
+<text x="270" y="120" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">جنسي</text>
+<text x="270" y="138" text-anchor="middle" fill="#fff" font-size="9">ذكر + أنثى</text>
+<rect x="60" y="160" width="280" height="45" rx="10" fill="#fff8e1" stroke="#ff9800" stroke-width="2"/>
+<text x="200" y="180" text-anchor="middle" fill="#e65100" font-size="12" font-weight="bold">النتيجة: استمرار الحياة 🌍</text>
+<text x="200" y="196" text-anchor="middle" fill="#333" font-size="10">بكتيريا، نباتات، حيوانات، إنسان</text>
+</svg>
+
+<h3>💡 هل تعلم؟</h3>
+<div class="did-you-know">
+<h4>🌟 حقائق مذهلة</h4>
+<ul>
+<li>بكتيريا واحدة تصل إلى <b>مليون</b> في 7 ساعات.</li>
+<li>بعض النباتات تعيش <b>آلاف السنين</b> بالتكاثر الخضري.</li>
+<li>الجسم البشري ينتج <b>100 مليون حيوان منوي</b> يومياً.</li>
+<li>الفيل يحمل <b>22 شهراً</b> — أطول حمل بين الثدييات!</li>
+</ul>
+</div>
+
+<h3>⚠️ أخطاء شائعة</h3>
+<div class="common-mistake">
+<h4>❌ لا تقع فيها</h4>
+<div class="mistake">❌ "التكاثر اللاجنسي لا ينتج أفراداً جديدة"</div>
+<div class="fix">✅ خطأ! ينتج أفراداً مطابقة للأم.</div>
+<div class="mistake">❌ "كل الكائنات تحتاج شريكاً للتكاثر"</div>
+<div class="fix">✅ خطأ! البكتيريا والخميرة تتكاثر بدون شريك.</div>
+</div>
+
+<h3>🛠️ التجربة 1: حبة الفول (10 أيام)</h3>
+<ol>
+<li>حبة فول + قطن + كوب زجاجي.</li>
+<li>بلّل القطن بالماء (ليس غرقاً).</li>
+<li>ضع الحبة بين القطن والكوب.</li>
+<li>افحص كل يوم وسجّل.</li>
+</ol>
+<p><b>المتوقع:</b> يوم 3 (جذير) → يوم 5 (سويقة) → يوم 7 (أوراق) → يوم 10 (نبتة كاملة).</p>
+
+<h3>🛠️ التجربة 2: مقارنة 3 بيئات (7 أيام)</h3>
+<ul>
+<li>كوب 1: ماء فقط.</li>
+<li>كوب 2: قطن مبلل.</li>
+<li>كوب 3: تربة.</li>
+</ul>
+<p>أي بيئة أسرع؟ لماذا؟</p>
+
+<h3>🛠️ التجربة 3: تأثير الضوء (14 يوم)</h3>
+<p>ازرع حبتين — واحدة قرب النافذة، والأخرى في خزانة مظلمة. قارن اللون والطول.</p>
+
+<h3>💰 مشروع تجاري: "شتلة لكل بيت"</h3>
+<div class="money-box">
+<b>ابدأ من 1000 جنيه:</b><br>
+• 30 بذرة طماطم/فلفل.<br>
+• 30 كيس أسود.<br>
+• رعاية 20 يوم.<br>
+• بع كل شتلة بـ 800 جنيه.<br>
+<b>الربح الصافي: 23,000 جنيه!</b>
+</div>
+
+<h3>🇸🇩 تطبيق سوداني</h3>
+<p>النخيل في السودان يتكاثر بالفسائل. البصل في الجزيرة بالبصلات. البطاطس في كردفان بالدرنات. <b>الفلاح السوداني خبير في التكاثر الخضري.</b></p>
+
+<h3>🇺🇸 الطريقة الأمريكية</h3>
+<div class="cn-box">
+<b>"30-Day Plant Journal" في كاليفورنيا:</b> كل طالب يزرع بذرة، ويصنع دفتراً يومياً بصور وقياسات وعرض PowerPoint. <b>السر: التوثيق اليومي.</b>
+</div>
+
+<h3>🇨🇳 الطريقة الصينية</h3>
+<div class="cn-box">
+<b>"Plant Race Olympics" في شنغهاي:</b> 6 مجموعات، كل مجموعة تزرع 10 بذور. التسجيل اليومي لمدة 21 يوم. الفائز بأعلى متوسط طول. <b>السر: التنافس.</b>
+</div>
+
+<h3>🎯 أسئلة التقييم الذاتي</h3>
+<ol>
+<li>اكتب تعريف التكاثر بأسلوبك.</li>
+<li>ما الفرق بين الجنسي واللاجنسي؟</li>
+<li>اذكر 3 أمثلة من بيئتك.</li>
+<li>لماذا التكاثر ضروري للنوع؟</li>
+<li>لو توقف التكاثر يومًا واحدًا، ماذا سيحدث؟</li>
+</ol>
+
+<h3>💼 مسارات مهنية</h3>
+<div class="career-path">
+<h4>🔬 مستقبلك</h4>
+<ul>
+<li>مهندس زراعي — إكثار المحاصيل.</li>
+<li>طبيب — علاج العقم والإنجاب.</li>
+<li>باحث في الاستنساخ والهندسة الوراثية.</li>
+<li>رائد أعمال — مشتل تجاري.</li>
+</ul>
+</div>
+
+<h3>📖 مصطلحات</h3>
+<div class="glossary">
+<div class="term"><b>التكاثر:</b> إنتاج أفراد جدد من النوع.</div>
+<div class="term"><b>اللاجنسي:</b> تكاثر بفرد واحد.</div>
+<div class="term"><b>الجنسي:</b> تكاثر بأمشاج ذكرية وأنثوية.</div>
+</div>
+
+<h3>🎓 خلاصة</h3>
+<ul>
+<li>التكاثر = استمرار الحياة.</li>
+<li>نوعان: لاجنسي وجنسي.</li>
+<li>افهم + جرّب + طبّق.</li>
+</ul>
+`
+},
+{
+title:'2️⃣ التكاثر اللاجنسي - قوة النسخ',
+tag:'حيوان/نبات',
+summary:'6 طرق + تجربة البالون + مشروع ربح 12,000/يوم.',
+image:'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Asexual_reproduction_diagram.svg/500px-Asexual_reproduction_diagram.svg.png',
+full:`
+<h3>🎯 قصة المدخل</h3>
+<p>جلست أمي تصنع العجين، وسألتها: "لماذا ينتفخ؟" قالت: "الخميرة". قلت: "وما هي؟" قالت: "كائنات صغيرة تتكاثر بسرعة، وتنتج غازاً ينتفخ به العجين". هكذا اكتشفت <b>التكاثر اللاجنسي</b> في مطبخي!</p>
+
+<h3>🗺️ خريطة المفاهيم</h3>
+<div class="concept-map">
+<h4>🌿 6 طرق للتكاثر اللاجنسي</h4>
+<div class="node"><span class="icon">🦠</span><span>الانشطار الثنائي - الأميبا</span></div>
+<div class="node"><span class="icon">🔵</span><span>الانشطار المتعدد - البلازموديوم</span></div>
+<div class="node"><span class="icon">🌱</span><span>التبرعم - الهيدرا والخميرة</span></div>
+<div class="node"><span class="icon">🍄</span><span>الأبواغ - الفطريات</span></div>
+<div class="node"><span class="icon">✂️</span><span>التفتت - البلاناريا</span></div>
+<div class="node"><span class="icon">🌾</span><span>العذري - بعض النباتات</span></div>
+</div>
+
+<h3>🖼️ رسم توضيحي</h3>
+<svg class="lesson-svg" viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg">
+<text x="200" y="20" text-anchor="middle" fill="#1a5490" font-size="14" font-weight="bold">6 طرق للتكاثر اللاجنسي</text>
+<circle cx="70" cy="70" r="30" fill="#bbdefb" stroke="#1a5490" stroke-width="2"/>
+<circle cx="70" cy="70" r="8" fill="#1a5490"/>
+<text x="70" y="115" text-anchor="middle" fill="#333" font-size="10" font-weight="bold">الأميبا</text>
+<text x="70" y="128" text-anchor="middle" fill="#666" font-size="9">انشطار</text>
+<circle cx="200" cy="55" r="20" fill="#c8e6c9" stroke="#4CAF50" stroke-width="2"/>
+<circle cx="225" cy="70" r="12" fill="#a5d6a7" stroke="#4CAF50" stroke-width="2"/>
+<text x="200" y="115" text-anchor="middle" fill="#333" font-size="10" font-weight="bold">الخميرة</text>
+<text x="200" y="128" text-anchor="middle" fill="#666" font-size="9">تبرعم</text>
+<ellipse cx="330" cy="70" rx="30" ry="20" fill="#ffe0b2" stroke="#ff9800" stroke-width="2"/>
+<text x="330" y="115" text-anchor="middle" fill="#333" font-size="10" font-weight="bold">السرخس</text>
+<text x="330" y="128" text-anchor="middle" fill="#666" font-size="9">أبواغ</text>
+<rect x="30" y="160" width="80" height="40" rx="8" fill="#f8bbd0" stroke="#e91e63" stroke-width="2"/>
+<text x="70" y="185" text-anchor="middle" fill="#333" font-size="10" font-weight="bold">البلاناريا</text>
+<text x="70" y="198" text-anchor="middle" fill="#666" font-size="9">تفتت</text>
+<circle cx="200" cy="180" r="18" fill="#e1bee7" stroke="#9c27b0" stroke-width="2"/>
+<circle cx="200" cy="180" r="6" fill="#9c27b0"/>
+<text x="200" y="225" text-anchor="middle" fill="#333" font-size="10" font-weight="bold">الأميبا (ظروف سيئة)</text>
+<text x="200" y="238" text-anchor="middle" fill="#666" font-size="9">انشطار متعدد</text>
+<ellipse cx="330" cy="180" rx="30" ry="20" fill="#f7e9b8" stroke="#8B6F3A" stroke-width="2"/>
+<text x="330" y="225" text-anchor="middle" fill="#333" font-size="10" font-weight="bold">نبات</text>
+<text x="330" y="238" text-anchor="middle" fill="#666" font-size="9">عذري</text>
+</svg>
+
+<h3>💡 هل تعلم؟</h3>
+<div class="did-you-know">
+<ul>
+<li>الخميرة تنقسم كل <b>20 دقيقة</b> — 72 جيلاً في يوم!</li>
+<li>بعض الفطريات تنتج <b>مليارات الأبواغ</b> في الثانية.</li>
+<li>الهيدرا إذا قُطعت إلى 5 قطع، تعود 5 هيدرات كاملة.</li>
+</ul>
+</div>
+
+<h3>⚠️ أخطاء شائعة</h3>
+<div class="common-mistake">
+<div class="mistake">❌ "التبرعم يعني نمو فقط"</div>
+<div class="fix">✅ التبرعم نوع تكاثر — ينتج فرداً جديداً.</div>
+<div class="mistake">❌ "الأبواغ بذور"</div>
+<div class="fix">✅ الأبواغ جسم من خلية واحدة، والبذور متعددة الخلايا.</div>
+</div>
+
+<h3>🛠️ التجربة 1: بالون الخميرة (20 دقيقة)</h3>
+<ol>
+<li>3 ملاعق ماء دافئ + 1 ملعقة سكر + 1 ملعقة خميرة في زجاجة.</li>
+<li>لبّس بالوناً على فتحة الزجاجة.</li>
+<li>انتظر 20 دقيقة.</li>
+</ol>
+<p><b>التفسير:</b> الخميرة تتبرعم وتنتج CO₂، فينتفخ البالون.</p>
+
+<h3>🛠️ التجربة 2: 3 أنواع سكر</h3>
+<p>كرر التجربة 3 مرات: بسكر عادي، بعسل، بدون سكر. أيها أسرع؟</p>
+
+<h3>🛠️ التجربة 3: عفن الخبز (5 أيام)</h3>
+<p>بلّل خبزاً، ضعه في كيس مغلق. راقب 5 أيام. ستشاهد فطراً أبيض ثم أخضر (أبواغ).</p>
+
+<h3>💰 مشروع: خبز الطازج</h3>
+<div class="money-box">
+<b>رأس المال: 10,000 جنيه</b><br>
+• 40 رغيفاً يومياً.<br>
+• سعر الرغيف 500 جنيه.<br>
+• الإيراد اليومي 20,000 جنيه.<br>
+• المصاريف 8,000 جنيه.<br>
+<b>الربح اليومي: 12,000 جنيه!</b>
+</div>
+
+<h3>🇸🇩 تطبيق سوداني</h3>
+<p>في السودان، معظم الأسر تصنع الخبز والجبن منزلياً. تعلم التبرعم يفتح أبواب صناعة غذائية.</p>
+
+<h3>🇺🇸 الطريقة الأمريكية</h3>
+<div class="cn-box">
+<b>🇺🇸 MIT:</b> كل طالب يقيس حجم البالون بكميات سكر مختلفة، ويرسم منحنى.
+</div>
+
+<h3>🇨🇳 الطريقة الصينية</h3>
+<div class="cn-box">
+<b>🇨🇳 بكين:</b> كل طالب يربي فطراً من أبواغ، ويطبخه بعد 14 يوم!
+</div>
+
+<h3>🎯 أسئلة التقييم</h3>
+<ol>
+<li>اذكر 6 طرق للتكاثر اللاجنسي.</li>
+<li>ما الفرق بين الانشطار والتبرعم؟</li>
+<li>لماذا الخميرة تتكاثر بسرعة؟</li>
+<li>اذكر مثالاً على التفتت.</li>
+<li>لماذا الأبواغ مهمة للفطريات؟</li>
+</ol>
+
+<h3>💼 مسارات مهنية</h3>
+<div class="career-path">
+<ul>
+<li>مخبز تجاري أو مصنع جبن.</li>
+<li>باحث في الميكروبيولوجيا.</li>
+<li>الصناعات الغذائية والتخمير.</li>
+</ul>
+</div>
+
+<h3>📖 مصطلحات</h3>
+<div class="glossary">
+<div class="term"><b>الانشطار:</b> انقسام خلية إلى خليتين.</div>
+<div class="term"><b>التبرعم:</b> نتوء ينفصل فرداً جديداً.</div>
+<div class="term"><b>البوغ:</b> جسم تكاثري صغير.</div>
+</div>
+
+<h3>🎓 خلاصة</h3>
+<ul>
+<li>6 طرق للتكاثر اللاجنسي.</li>
+<li>سريع، نسخ طبق الأصل، لا يحتاج شريك.</li>
+<li>تطبيق عملي: صناعة غذائية مربحة.</li>
+</ul>
+`
+  }
