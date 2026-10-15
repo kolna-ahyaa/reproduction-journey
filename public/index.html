@@ -1146,3 +1146,303 @@ const ORDER_Q=[
 {q:"رتب مراحل دورة حياة دودة القز",items:["البيضة","اليرقة","الشرنقة","العثة البالغة"]},
 {q:"رتب أطوار القمر",items:["المحاق","الهلال","التربيع الأول","البدر","التربيع الأخير"]}
 ]; 
+
+/* ============ 9. التخزين ============ */
+const SK='reproduction_v16';
+const LBK='reproduction_lb';
+const CODESK='reproduction_codes';
+const USEDK='reproduction_used_codes';
+const ERRK='reproduction_errors';
+const STREAKK='reproduction_streak';
+const DAILY_BONUS_KEY='reproduction_daily_bonus';
+const BADGES_KEY='reproduction_badges';
+const COUNTERS_KEY='reproduction_counters';
+const NAME_KEY='reproduction_player_name';
+
+function loadProgress(){
+  try{const d=localStorage.getItem(SK);if(d)return JSON.parse(d);}catch(e){}
+  return {totalScore:0,completed:{},unlockedStates:[]};
+}
+function saveProgress(){try{localStorage.setItem(SK,JSON.stringify(progress));}catch(e){}}
+let progress=loadProgress();
+if(!progress.unlockedStates)progress.unlockedStates=[];
+
+function loadCounters(){
+  try{const d=localStorage.getItem(COUNTERS_KEY);if(d)return JSON.parse(d);}catch(e){}
+  return {noMistake:0,mixCorrect:0,whyCorrect:0,quickDone:false,lessonsRead:0,tfCorrect:0,orderCorrect:0};
+}
+function saveCounters(){try{localStorage.setItem(COUNTERS_KEY,JSON.stringify(counters));}catch(e){}}
+let counters=loadCounters();
+
+/* ============ 10. نظام الأكواد ============ */
+const SECRET='SUDAN_BIO_2026_SECRET';
+const ADMIN_PASS='ADMIN2026';
+
+function simpleHash(str){
+  let h=5381;
+  for(let i=0;i<str.length;i++){h=((h<<5)+h)+str.charCodeAt(i);h=h&h;}
+  return Math.abs(h).toString(16).toUpperCase().padStart(8,'0').substring(0,6);
+}
+function generateSignedCode(state,expiry){
+  const sig=simpleHash(state+'|'+expiry+'|'+SECRET);
+  return 'SDN'+String(state).padStart(2,'0')+'-'+expiry+'-'+sig;
+}
+function parseCode(code){
+  const m=code.toUpperCase().match(/^SDN(\d{2})-(\d{6})-([A-F0-9]{6})$/);
+  if(!m)return null;
+  return {state:parseInt(m[1]),expiry:m[2],sig:m[3]};
+}
+function validateCodeOffline(code){
+  const p=parseCode(code);
+  if(!p)return {valid:false,reason:'صيغة الكود غير صحيحة'};
+  const expectedSig=simpleHash(p.state+'|'+p.expiry+'|'+SECRET);
+  if(p.sig!==expectedSig)return {valid:false,reason:'الكود غير صالح'};
+  const yy=2000+parseInt(p.expiry.substring(0,2));
+  const mm=parseInt(p.expiry.substring(2,4))-1;
+  const dd=parseInt(p.expiry.substring(4,6));
+  if(new Date()>new Date(yy,mm,dd))return {valid:false,reason:'انتهت الصلاحية'};
+  const used=JSON.parse(localStorage.getItem(USEDK)||'[]');
+  if(used.includes(code.toUpperCase()))return {valid:false,reason:'مستخدم مسبقاً'};
+  return {valid:true,state:p.state,expiry:p.expiry};
+}
+function validateCode(){
+  const input=document.getElementById('codeInput');
+  const fb=document.getElementById('codeFeedback');
+  const code=input.value.trim().toUpperCase();
+  if(!code){fb.style.color='#ff6b6b';fb.textContent='⚠️ أدخل الكود';return;}
+  const result=validateCodeOffline(code);
+  if(!result.valid){fb.style.color='#ff6b6b';fb.textContent='❌ '+result.reason;return;}
+  if(result.state===0){
+    for(let i=FREE_STATES;i<18;i++){
+      const id=STATES[i].id;
+      if(!progress.unlockedStates.includes(id))progress.unlockedStates.push(id);
+    }
+    fb.style.color='#4CAF50';fb.textContent='🎉 تم فتح جميع الولايات!';
+  }else{
+    const idx=result.state-1;
+    if(idx<0||idx>=STATES.length){fb.style.color='#ff6b6b';fb.textContent='❌ رقم غير معروف';return;}
+    const id=STATES[idx].id;
+    if(!progress.unlockedStates.includes(id))progress.unlockedStates.push(id);
+    fb.style.color='#4CAF50';fb.textContent='🎉 تم فتح: '+STATES[idx].name;
+  }
+  const used=JSON.parse(localStorage.getItem(USEDK)||'[]');
+  if(!used.includes(code))used.push(code);
+  localStorage.setItem(USEDK,JSON.stringify(used));
+  saveProgress();
+  showToast('✅ تم التفعيل');
+  setTimeout(function(){showScreen('splash');},2000);
+}
+
+/* ============ 11. الأدمن ============ */
+let logoTaps=0,lastTap=0;
+function tapLogo(){
+  const now=Date.now();
+  if(now-lastTap>1500)logoTaps=0;
+  logoTaps++;lastTap=now;
+  if(logoTaps>=5){logoTaps=0;showScreen('adminLoginScreen');}
+}
+function adminLogin(){
+  const pass=document.getElementById('adminPass').value;
+  const fb=document.getElementById('adminLoginFeedback');
+  if(pass===ADMIN_PASS){
+    fb.textContent='';document.getElementById('adminPass').value='';
+    showScreen('adminScreen');renderIssuedCodes();
+  }else{fb.textContent='❌ كلمة مرور خاطئة';}
+}
+function generateCode(){
+  const stateVal=document.getElementById('adminState').value;
+  const days=parseInt(document.getElementById('adminDays').value)||60;
+  const exp=new Date();exp.setDate(exp.getDate()+days);
+  const yy=String(exp.getFullYear()).substring(2);
+  const mm=String(exp.getMonth()+1).padStart(2,'0');
+  const dd=String(exp.getDate()).padStart(2,'0');
+  const expiryStr=yy+mm+dd;
+  const stateNum=stateVal==='ALL'?0:parseInt(stateVal);
+  const code=generateSignedCode(stateNum,expiryStr);
+  document.getElementById('generatedCodeBox').innerHTML=
+    '<div class="generated-code">'+code+'</div>'+
+    '<p style="font-size:11px;color:#0f0;text-align:center;">الولاية: '+(stateVal==='ALL'?'الكل':stateNum+' - '+STATES[stateNum-1].name)+'</p>'+
+    '<p style="font-size:11px;color:#0f0;text-align:center;">ينتهي: '+dd+'/'+mm+'/20'+yy+'</p>'+
+    '<button class="btn btn-gold btn-small" style="margin-top:10px;width:100%;" onclick="copyCode(\''+code+'\')">📋 انسخ</button>';
+  const codes=JSON.parse(localStorage.getItem(CODESK)||'[]');
+  codes.push({code:code,state:stateVal,expiry:expiryStr});
+  localStorage.setItem(CODESK,JSON.stringify(codes));
+  renderIssuedCodes();
+}
+function copyCode(code){
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(code).then(function(){showToast('📋 تم النسخ');});
+  }else{
+    const el=document.createElement('textarea');
+    el.value=code;document.body.appendChild(el);el.select();
+    document.execCommand('copy');document.body.removeChild(el);
+    showToast('📋 تم النسخ');
+  }
+}
+function renderIssuedCodes(){
+  const codes=JSON.parse(localStorage.getItem(CODESK)||'[]');
+  const list=document.getElementById('issuedCodesList');
+  if(codes.length===0){list.textContent='لا توجد أكواد';return;}
+  list.innerHTML=codes.slice().reverse().map(function(c){
+    return '<div>'+c.code+' | '+c.state+' | '+c.expiry+'</div>';
+  }).join('');
+}
+function clearIssuedCodes(){
+  if(confirm('حذف سجل الأكواد؟')){
+    localStorage.removeItem(CODESK);
+    renderIssuedCodes();
+    showToast('🗑️ تم الحذف');
+  }
+}
+
+/* ============ 12. الأصوات ============ */
+let audioCtx=null;
+let musicPlaying=false;
+let musicNodes=[];
+let musicInterval=null;
+
+function initAudio(){
+  if(!audioCtx){try{audioCtx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}
+  if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
+}
+function playTone(freq,dur,type,delay,vol){
+  if(!audioCtx)return;
+  try{
+    const osc=audioCtx.createOscillator();
+    const g=audioCtx.createGain();
+    osc.type=type||'sine';
+    osc.frequency.value=freq;
+    osc.connect(g);g.connect(audioCtx.destination);
+    const tt=audioCtx.currentTime+(delay||0);
+    g.gain.setValueAtTime(vol||0.25,tt);
+    g.gain.exponentialRampToValueAtTime(0.001,tt+dur);
+    osc.start(tt);osc.stop(tt+dur);
+  }catch(e){}
+}
+function soundWelcome(){
+  playTone(392,.25,'triangle',0,.5);
+  playTone(523.25,.25,'triangle',.22,.5);
+  playTone(659.25,.25,'triangle',.44,.5);
+  playTone(783.99,.30,'triangle',.66,.55);
+  playTone(1046.50,.80,'triangle',1.00,.6);
+}
+function soundCorrect(){playTone(659.25,.10);playTone(880.00,.20,'sine',.10);}
+function soundWrong(){playTone(200,.25,'sawtooth',0);playTone(150,.30,'sawtooth',.10);}
+function soundClick(){playTone(880,.05,'square',0);}
+function soundLetter(){playTone(1200,.08,'sine',0,.15);}
+function soundZoomIn(){playTone(523.25,.08);playTone(659.25,.08,'sine',.06);playTone(783.99,.12,'sine',.12);}
+function soundZoomOut(){playTone(783.99,.08);playTone(659.25,.08,'sine',.06);playTone(523.25,.12,'sine',.12);}
+function soundComplete(){playTone(523.25,.15);playTone(659.25,.15,'sine',.15);playTone(783.99,.15,'sine',.30);playTone(1046.50,.40,'sine',.45);}
+function soundBadge(){playTone(880,.15,'triangle',0,.5);playTone(1108.73,.15,'triangle',.15,.5);playTone(1318.51,.30,'triangle',.30,.55);}
+function soundBonus(){playTone(659.25,.15,'triangle',0,.5);playTone(783.99,.15,'triangle',.15,.5);playTone(1046.50,.40,'triangle',.30,.55);}
+
+function startMusic(){
+  if(!audioCtx||musicPlaying)return;
+  musicPlaying=true;
+  const d1=audioCtx.createOscillator(),g1=audioCtx.createGain();
+  d1.type='sine';d1.frequency.value=110;g1.gain.value=0.04;
+  d1.connect(g1);g1.connect(audioCtx.destination);d1.start();
+  musicNodes.push({osc:d1,gain:g1});
+  const d2=audioCtx.createOscillator(),g2=audioCtx.createGain();
+  d2.type='sine';d2.frequency.value=165;g2.gain.value=0.02;
+  d2.connect(g2);g2.connect(audioCtx.destination);d2.start();
+  musicNodes.push({osc:d2,gain:g2});
+  const mel=[261.63,293.66,329.63,349.23,392.00,349.23,329.63,293.66,261.63,246.94,261.63,293.66];
+  let i=0;
+  musicInterval=setInterval(function(){
+    if(!musicPlaying)return;
+    playTone(mel[i%mel.length],1.8,'sine',0,0.04);
+    i++;
+  },1200);
+}
+function stopMusic(){
+  musicPlaying=false;
+  if(musicInterval){clearInterval(musicInterval);musicInterval=null;}
+  musicNodes.forEach(function(n){try{n.osc.stop();}catch(e){}});
+  musicNodes=[];
+}
+function toggleMusic(){
+  initAudio();
+  if(musicPlaying){
+    stopMusic();
+    document.getElementById('musicBtn').classList.remove('active');
+    localStorage.setItem('game_music','off');
+  }else{
+    startMusic();
+    document.getElementById('musicBtn').classList.add('active');
+    localStorage.setItem('game_music','on');
+  }
+}
+
+/* ============ 13. المكافأة اليومية + السلسلة ============ */
+function getTodayDateStr(){
+  const d=new Date();
+  return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+}
+function canClaimDailyBonus(){
+  const data=JSON.parse(localStorage.getItem(DAILY_BONUS_KEY)||'{}');
+  return data.lastClaim!==getTodayDateStr();
+}
+function claimDailyBonus(){
+  if(!canClaimDailyBonus()){showToast('⏰ استلمت مكافأة اليوم!');return;}
+  const streak=getStreak();
+  let reward=10;
+  if(streak>=3)reward=15;
+  if(streak>=7)reward=25;
+  if(streak>=14)reward=50;
+  if(streak>=30)reward=100;
+  progress.totalScore=(progress.totalScore||0)+reward;
+  saveProgress();
+  updateUserBar();
+  localStorage.setItem(DAILY_BONUS_KEY,JSON.stringify({lastClaim:getTodayDateStr(),streak:streak}));
+  document.getElementById('bonusAmount').textContent='+'+reward+' نقطة';
+  document.getElementById('bonusMessage').innerHTML='عد غداً! 🔥 سلسلتك: <b>'+streak+'</b>';
+  soundBonus();
+  setTimeout(function(){showScreen('dailyBonusScreen');},200);
+}
+function updateStreak(){
+  const data=JSON.parse(localStorage.getItem(STREAKK)||'{}');
+  const today=new Date().toDateString();
+  const last=data.lastDate;
+  if(last===today)return data.count||1;
+  const yesterday=new Date(Date.now()-86400000).toDateString();
+  let newCount=1;
+  if(last===yesterday)newCount=(data.count||0)+1;
+  localStorage.setItem(STREAKK,JSON.stringify({lastDate:today,count:newCount}));
+  return newCount;
+}
+function getStreak(){
+  const data=JSON.parse(localStorage.getItem(STREAKK)||'{}');
+  const today=new Date().toDateString();
+  const yesterday=new Date(Date.now()-86400000).toDateString();
+  if(data.lastDate===today||data.lastDate===yesterday)return data.count||1;
+  return 0;
+}
+
+/* ============ 14. دفتر الأخطاء ============ */
+function saveError(question,correctAnswer){
+  const errors=JSON.parse(localStorage.getItem(ERRK)||'[]');
+  if(errors.some(function(e){return e.q===question;}))return;
+  errors.push({q:question,a:correctAnswer,date:new Date().toLocaleDateString('ar-EG')});
+  if(errors.length>50)errors.splice(0,errors.length-50);
+  localStorage.setItem(ERRK,JSON.stringify(errors));
+}
+function showErrorNotebook(){
+  const errors=JSON.parse(localStorage.getItem(ERRK)||'[]');
+  const list=document.getElementById('errorList');
+  if(errors.length===0){
+    list.innerHTML='<div style="text-align:center;padding:40px 20px;color:#fff;background:rgba(0,0,0,.3);border-radius:18px;font-size:14px;">🎉 لا توجد أخطاء!</div>';
+  }else{
+    list.innerHTML=errors.slice().reverse().map(function(e){
+      return '<div class="error-item"><div class="question">❌ '+e.q+'</div><div class="answer">✅ '+e.a+'</div><div class="date">📅 '+e.date+'</div></div>';
+    }).join('');
+  }
+  showScreen('errorScreen');
+}
+function clearErrors(){
+  if(confirm('حذف كل الأخطاء؟')){
+    localStorage.removeItem(ERRK);
+    showErrorNotebook();
+    showToast('🗑️ تم الحذف');
+  }
+  }
