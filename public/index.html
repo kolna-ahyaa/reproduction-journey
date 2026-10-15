@@ -1894,3 +1894,537 @@ function getQuestionIcon(q){
   if(s.indexOf('الفيروس')!==-1||s.indexOf('اللقاح')!==-1)return '🦠';
   return '🧬';
   }
+
+/* ============ 23. مؤقت السؤال ============ */
+let questionTimer=null;
+let timeLeft=30;
+function startQuestionTimer(){
+  stopQuestionTimer();
+  timeLeft=30;
+  const fill=document.getElementById('timerFill');
+  if(!fill)return;
+  fill.style.width='100%';
+  fill.className='timer-fill';
+  questionTimer=setInterval(function(){
+    timeLeft--;
+    fill.style.width=((timeLeft/30)*100)+'%';
+    if(timeLeft<=10)fill.className='timer-fill danger';
+    else if(timeLeft<=20)fill.className='timer-fill warning';
+    if(timeLeft<=0){
+      stopQuestionTimer();
+      if(!answered){
+        answered=true;
+        const q=currentQuestions[currentQuestionIndex];
+        const all=document.querySelectorAll('#optionsContainer .option-btn');
+        all.forEach(function(b){b.disabled=true;});
+        progress.totalScore=Math.max(0,(progress.totalScore||0)-2);
+        saveProgress();
+        saveError(q.q,q.o[q.a]);
+        const fb=document.getElementById('feedback');
+        fb.className='feedback err show';
+        fb.textContent='⏰ انتهى الوقت! -2 نقاط';
+        soundWrong();
+        setTimeout(function(){backToStages();},2000);
+      }
+    }
+  },1000);
+}
+function stopQuestionTimer(){
+  if(questionTimer){clearInterval(questionTimer);questionTimer=null;}
+}
+
+/* ============ 24. لعبة MCQ ============ */
+function startStage(stageIndex){
+  currentStageIndex=stageIndex;
+  currentQuestions=getStateQuestions(currentStateIndex);
+  currentQuestionIndex=stageIndex;
+  hintUsed=false;answered=false;
+  const state=STATES[currentStateIndex];
+  document.getElementById('gameState').textContent=lang==='ar'?state.name:state.en;
+  document.getElementById('gameStage').textContent=state.start+stageIndex;
+  document.getElementById('gameScore').textContent=progress.totalScore||0;
+  document.getElementById('gameStreak').textContent=counters.noMistake;
+  document.getElementById('questionCard').classList.remove('why','tf','order');
+  renderQuestion();
+  showScreen('gameScreen');
+  startQuestionTimer();
+}
+function renderQuestion(){
+  const q=currentQuestions[currentQuestionIndex];
+  if(!q)return;
+  answered=false;hintUsed=false;
+  document.getElementById('questionIcon').textContent=getQuestionIcon(q);
+  document.getElementById('questionText').textContent=q.q;
+  const fb=document.getElementById('feedback');
+  fb.className='feedback';fb.textContent='';
+  const c=document.getElementById('optionsContainer');
+  c.innerHTML='';
+  q.o.forEach(function(opt,i){
+    const b=document.createElement('button');
+    b.className='option-btn';b.textContent=opt;
+    b.onclick=function(){checkAnswer(i,b);};
+    c.appendChild(b);
+  });
+}
+function checkAnswer(selected,btn){
+  if(answered)return;
+  answered=true;stopQuestionTimer();
+  const q=currentQuestions[currentQuestionIndex];
+  const all=document.querySelectorAll('#optionsContainer .option-btn');
+  all.forEach(function(b){b.disabled=true;});
+  const fb=document.getElementById('feedback');
+  if(selected===q.a){
+    btn.classList.add('correct');soundCorrect();
+    counters.noMistake++;
+    let pts=1;
+    if(counters.noMistake%3===0)pts=2;
+    if(hintUsed)pts=0;
+    progress.totalScore=(progress.totalScore||0)+pts;
+    saveProgress();saveCounters();
+    fb.className='feedback ok show';
+    fb.textContent=hintUsed?'✅ صحيح! (بالتلميح)':'✅ +'+pts+' نقطة'+(pts===2?' 🔥':'');
+    document.getElementById('gameScore').textContent=progress.totalScore;
+    document.getElementById('gameStreak').textContent=counters.noMistake;
+    const state=STATES[currentStateIndex];
+    if(!progress.completed[state.id])progress.completed[state.id]=[];
+    const wasC=progress.completed[state.id].length>=state.stages;
+    if(progress.completed[state.id].indexOf(currentStageIndex)===-1)progress.completed[state.id].push(currentStageIndex);
+    saveProgress();checkBadges();
+    const nowC=(progress.completed[state.id]||[]).length>=state.stages;
+    setTimeout(function(){if(nowC&&!wasC)showComplete();else backToStages();},1300);
+  }else{
+    btn.classList.add('wrong');soundWrong();
+    counters.noMistake=0;saveCounters();
+    progress.totalScore=Math.max(0,(progress.totalScore||0)-2);
+    saveProgress();
+    document.getElementById('gameScore').textContent=progress.totalScore;
+    document.getElementById('gameStreak').textContent=0;
+    saveError(q.q,q.o[q.a]);
+    fb.className='feedback err show';
+    fb.textContent='❌ خاطئة. -2 نقاط';
+    setTimeout(function(){backToStages();},2000);
+  }
+}
+function useHint(){
+  if(answered||hintUsed)return;
+  if((progress.totalScore||0)<5){showToast('⚠️ تحتاج 5 نقاط');return;}
+  hintUsed=true;soundClick();
+  progress.totalScore=Math.max(0,(progress.totalScore||0)-5);
+  saveProgress();
+  document.getElementById('gameScore').textContent=progress.totalScore;
+  const q=currentQuestions[currentQuestionIndex];
+  const all=document.querySelectorAll('#optionsContainer .option-btn');
+  const wrong=[];
+  q.o.forEach(function(_,i){if(i!==q.a)wrong.push(i);});
+  wrong.slice(0,2).forEach(function(i){all[i].style.opacity='0.3';all[i].disabled=true;});
+  const fb=document.getElementById('feedback');
+  fb.className='feedback info show';
+  fb.textContent='💡 تم حذف خيارين. -5 نقاط.';
+}
+
+/* ============ 25. لعبة علل ============ */
+let whyStageIndex=0,whyQuestion=null,whyAnswered=false,whyCorrectIdx=0;
+function startWhyStage(stageIndex){
+  whyStageIndex=stageIndex;
+  const state=STATES[currentStateIndex];
+  const globalNum=state.start+stageIndex;
+  const idx=(globalNum*13+currentStateIndex*7+stageIndex*31+104729)%WHY_QUESTIONS.length;
+  whyQuestion=WHY_QUESTIONS[idx];
+  whyAnswered=false;hintUsed=false;
+  document.getElementById('gameState').textContent=lang==='ar'?state.name:state.en;
+  document.getElementById('gameStage').textContent=globalNum;
+  document.getElementById('gameScore').textContent=progress.totalScore||0;
+  document.getElementById('questionCard').classList.add('why');
+  document.getElementById('questionCard').classList.remove('tf','order');
+  document.getElementById('questionIcon').textContent='🤔';
+  document.getElementById('questionText').textContent=whyQuestion.q;
+  const fb=document.getElementById('feedback');
+  fb.className='feedback';fb.textContent='';
+  const c=document.getElementById('optionsContainer');
+  c.innerHTML='';
+  const allA=[whyQuestion.answer];
+  const wrongPool=WHY_QUESTIONS.filter(function(w){return w.idx!==whyQuestion.idx;}).map(function(w){return w.answer;});
+  for(let i=0;i<3&&wrongPool.length>0;i++){
+    const ri=Math.floor(Math.random()*wrongPool.length);
+    allA.push(wrongPool.splice(ri,1)[0]);
+  }
+  for(let i=allA.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    const t=allA[i];allA[i]=allA[j];allA[j]=t;
+  }
+  whyCorrectIdx=allA.indexOf(whyQuestion.answer);
+  allA.forEach(function(a,i){
+    const b=document.createElement('button');
+    b.className='option-btn';
+    b.style.fontSize='12px';b.style.textAlign='right';b.style.lineHeight='1.5';
+    b.textContent=a;
+    b.onclick=function(){checkWhyAnswer(i,b);};
+    c.appendChild(b);
+  });
+  showScreen('gameScreen');
+}
+function checkWhyAnswer(selected,btn){
+  if(whyAnswered)return;
+  whyAnswered=true;
+  const all=document.querySelectorAll('#optionsContainer .option-btn');
+  all.forEach(function(b){b.disabled=true;});
+  const fb=document.getElementById('feedback');
+  if(selected===whyCorrectIdx){
+    btn.classList.add('correct');soundCorrect();
+    counters.noMistake++;counters.whyCorrect++;
+    let pts=1;
+    if(counters.noMistake%3===0)pts=2;
+    if(hintUsed)pts=0;
+    progress.totalScore=(progress.totalScore||0)+pts;
+    saveCounters();saveProgress();
+    fb.className='feedback ok show';
+    fb.textContent='✅ +'+pts+' نقطة';
+    document.getElementById('gameScore').textContent=progress.totalScore;
+    const state=STATES[currentStateIndex];
+    if(!progress.completed[state.id])progress.completed[state.id]=[];
+    const wasC=progress.completed[state.id].length>=state.stages;
+    if(progress.completed[state.id].indexOf(whyStageIndex)===-1)progress.completed[state.id].push(whyStageIndex);
+    saveProgress();checkBadges();
+    const nowC=(progress.completed[state.id]||[]).length>=state.stages;
+    setTimeout(function(){if(nowC&&!wasC)showComplete();else backToStages();},1800);
+  }else{
+    btn.classList.add('wrong');soundWrong();
+    counters.noMistake=0;saveCounters();
+    progress.totalScore=Math.max(0,(progress.totalScore||0)-2);
+    saveProgress();
+    document.getElementById('gameScore').textContent=progress.totalScore;
+    saveError(whyQuestion.q,whyQuestion.answer);
+    fb.className='feedback err show';
+    fb.textContent='❌ خاطئة. الصحيح: '+whyQuestion.answer;
+    setTimeout(function(){backToStages();},2600);
+  }
+}
+
+/* ============ 26. لعبة صح/خطأ ============ */
+let tfStageIndex=0,tfQuestion=null,tfAnswered=false;
+function startTFStage(stageIndex){
+  tfStageIndex=stageIndex;tfAnswered=false;
+  const state=STATES[currentStateIndex];
+  const globalNum=state.start+stageIndex;
+  const idx=(globalNum*19+currentStateIndex*13+stageIndex*41+32452843)%TF_QUESTIONS.length;
+  tfQuestion=TF_QUESTIONS[idx];
+  document.getElementById('tfState').textContent=lang==='ar'?state.name:state.en;
+  document.getElementById('tfStage').textContent=globalNum;
+  document.getElementById('tfScore').textContent=progress.totalScore||0;
+  document.getElementById('tfIcon').textContent=tfQuestion.isTrue?'✅':'❌';
+  document.getElementById('tfStatement').textContent=tfQuestion.statement;
+  document.getElementById('tfFeedback').className='feedback';
+  document.getElementById('tfFeedback').textContent='';
+  document.getElementById('tfTrueBtn').className='tf-btn tf-true';
+  document.getElementById('tfFalseBtn').className='tf-btn tf-false';
+  document.getElementById('tfTrueBtn').disabled=false;
+  document.getElementById('tfFalseBtn').disabled=false;
+  showScreen('tfScreen');
+}
+function answerTF(userSaidTrue){
+  if(tfAnswered)return;
+  tfAnswered=true;
+  const isC=(userSaidTrue===tfQuestion.isTrue);
+  const tB=document.getElementById('tfTrueBtn');
+  const fB=document.getElementById('tfFalseBtn');
+  tB.disabled=true;fB.disabled=true;
+  const fb=document.getElementById('tfFeedback');
+  if(tfQuestion.isTrue)tB.classList.add('correct');
+  else fB.classList.add('correct');
+  if(!isC){
+    if(userSaidTrue)tB.classList.add('wrong');
+    else fB.classList.add('wrong');
+  }
+  if(isC){
+    soundCorrect();
+    counters.noMistake++;counters.tfCorrect++;
+    let pts=1;
+    if(counters.noMistake%3===0)pts=2;
+    progress.totalScore=(progress.totalScore||0)+pts;
+    saveCounters();saveProgress();
+    fb.className='feedback ok show';
+    fb.textContent='✅ +'+pts+' نقطة — '+tfQuestion.explanation;
+    document.getElementById('tfScore').textContent=progress.totalScore;
+    const state=STATES[currentStateIndex];
+    if(!progress.completed[state.id])progress.completed[state.id]=[];
+    const wasC=progress.completed[state.id].length>=state.stages;
+    if(progress.completed[state.id].indexOf(tfStageIndex)===-1)progress.completed[state.id].push(tfStageIndex);
+    saveProgress();checkBadges();
+    const nowC=(progress.completed[state.id]||[]).length>=state.stages;
+    setTimeout(function(){if(nowC&&!wasC)showComplete();else backToStages();},2200);
+  }else{
+    soundWrong();
+    counters.noMistake=0;saveCounters();
+    progress.totalScore=Math.max(0,(progress.totalScore||0)-2);
+    saveProgress();
+    document.getElementById('tfScore').textContent=progress.totalScore;
+    saveError(tfQuestion.statement,tfQuestion.isTrue?'صح':'خطأ');
+    fb.className='feedback err show';
+    fb.textContent='❌ الصحيح: '+(tfQuestion.isTrue?'صح':'خطأ')+' — '+tfQuestion.explanation;
+    setTimeout(function(){backToStages();},3000);
+  }
+}
+
+/* ============ 27. لعبة الترتيب ============ */
+let orderStageIndex=0,orderQuestion=null,orderSelected=[],orderShuffled=[];
+function startOrderStage(stageIndex){
+  orderStageIndex=stageIndex;orderSelected=[];
+  const state=STATES[currentStateIndex];
+  const globalNum=state.start+stageIndex;
+  const idx=(globalNum*23+currentStateIndex*17+stageIndex*47+49979687)%ORDER_Q.length;
+  orderQuestion=ORDER_Q[idx];
+  orderShuffled=orderQuestion.items.slice();
+  for(let i=orderShuffled.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    const t=orderShuffled[i];orderShuffled[i]=orderShuffled[j];orderShuffled[j]=t;
+  }
+  document.getElementById('orderState').textContent=lang==='ar'?state.name:state.en;
+  document.getElementById('orderStage').textContent=globalNum;
+  document.getElementById('orderScore').textContent=progress.totalScore||0;
+  document.getElementById('orderQuestion').textContent=orderQuestion.q;
+  document.getElementById('orderFeedback').className='feedback';
+  document.getElementById('orderFeedback').textContent='';
+  renderOrderItems();
+  showScreen('orderScreen');
+}
+function renderOrderItems(){
+  const list=document.getElementById('orderList');
+  list.innerHTML='';
+  orderShuffled.forEach(function(item){
+    const btn=document.createElement('button');
+    btn.className='order-item';
+    const sI=orderSelected.indexOf(item);
+    if(sI!==-1)btn.classList.add('selected');
+    btn.innerHTML='<span class="order-num">'+(sI!==-1?sI+1:'?')+'</span><span style="flex:1">'+item+'</span>';
+    btn.onclick=function(){
+      if(orderSelected.indexOf(item)!==-1)return;
+      soundLetter();
+      orderSelected.push(item);
+      renderOrderItems();
+      if(orderSelected.length===orderQuestion.items.length){
+        setTimeout(checkOrderAnswer,300);
+      }
+    };
+    list.appendChild(btn);
+  });
+}
+function checkOrderAnswer(){
+  const fb=document.getElementById('orderFeedback');
+  const c=JSON.stringify(orderSelected)===JSON.stringify(orderQuestion.items);
+  document.querySelectorAll('#orderList .order-item').forEach(function(b){b.disabled=true;});
+  if(c){
+    soundCorrect();
+    counters.noMistake++;counters.orderCorrect++;
+    let pts=2;
+    if(counters.noMistake%3===0)pts=3;
+    progress.totalScore=(progress.totalScore||0)+pts;
+    saveCounters();saveProgress();
+    fb.className='feedback ok show';
+    fb.textContent='✅ ترتيب صحيح! +'+pts+' نقاط';
+    document.getElementById('orderScore').textContent=progress.totalScore;
+    const state=STATES[currentStateIndex];
+    if(!progress.completed[state.id])progress.completed[state.id]=[];
+    const wasC=progress.completed[state.id].length>=state.stages;
+    if(progress.completed[state.id].indexOf(orderStageIndex)===-1)progress.completed[state.id].push(orderStageIndex);
+    saveProgress();checkBadges();
+    const nowC=(progress.completed[state.id]||[]).length>=state.stages;
+    setTimeout(function(){if(nowC&&!wasC)showComplete();else backToStages();},1800);
+  }else{
+    soundWrong();
+    counters.noMistake=0;saveCounters();
+    progress.totalScore=Math.max(0,(progress.totalScore||0)-2);
+    saveProgress();
+    document.getElementById('orderScore').textContent=progress.totalScore;
+    saveError(orderQuestion.q,orderQuestion.items.join(' → '));
+    fb.className='feedback err show';
+    fb.innerHTML='❌ ترتيب خاطئ.<br><small>'+orderQuestion.items.join(' ← ')+'</small>';
+    setTimeout(function(){backToStages();},2800);
+  }
+}
+
+/* ============ 28. لعبة خلط الحروف ============ */
+let mixCurrentWord=null,mixCurrentLetters=[],mixAnswer=[],mixStageIndex=0,mixHintUsed=false;
+function startMixStage(stageIndex){
+  mixStageIndex=stageIndex;
+  const state=STATES[currentStateIndex];
+  const globalNum=state.start+stageIndex;
+  const wi=(globalNum*17+currentStateIndex*11+stageIndex*23+15485863)%MIX_WORDS.length;
+  mixCurrentWord=MIX_WORDS[wi];
+  document.getElementById('mixState').textContent=lang==='ar'?state.name:state.en;
+  document.getElementById('mixStage').textContent=globalNum;
+  document.getElementById('mixScore').textContent=progress.totalScore||0;
+  document.getElementById('mixStreak').textContent=counters.noMistake;
+  document.getElementById('mixIcon').textContent=mixCurrentWord.icon;
+  document.getElementById('mixHint').textContent=mixCurrentWord.hint;
+  document.getElementById('mixFeedback').className='feedback';
+  document.getElementById('mixFeedback').textContent='';
+  mixAnswer=[];mixHintUsed=false;mixCurrentLetters=[];
+  window._mixRevealedCount=0;
+  buildMixAnswer();buildMixLetters();
+  showScreen('mixScreen');
+}
+function buildMixAnswer(){
+  const b=document.getElementById('mixAnswer');
+  b.innerHTML='';
+  const wl=mixCurrentWord.word.length;
+  for(let i=0;i<wl;i++){
+    const s=document.createElement('div');
+    s.className='mix-slot';
+    s.textContent=mixAnswer[i]||'';
+    if(mixAnswer[i])s.classList.add('filled');
+    b.appendChild(s);
+  }
+}
+function buildMixLetters(){
+  const lb=document.getElementById('mixLetters');
+  lb.innerHTML='';
+  if(mixCurrentLetters.length===0){
+    const letters=mixCurrentWord.word.split('');
+    const extra=['ب','ت','ح','د','ر','س','ص','ط','ع','ف','ق','ك','ل','م','ن','ه','و','ي'];
+    const ec=Math.max(2,Math.floor(mixCurrentWord.word.length/2));
+    for(let i=0;i<ec;i++)letters.push(extra[Math.floor(Math.random()*extra.length)]);
+    for(let i=letters.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      const t=letters[i];letters[i]=letters[j];letters[j]=t;
+    }
+    mixCurrentLetters=letters;
+  }
+  mixCurrentLetters.forEach(function(l,i){
+    const b=document.createElement('button');
+    b.className='letter-btn';b.textContent=l;
+    b.onclick=function(){selectMixLetter(i,b);};
+    lb.appendChild(b);
+  });
+}
+function selectMixLetter(idx,btn){
+  if(btn.disabled)return;
+  if(mixAnswer.length>=mixCurrentWord.word.length)return;
+  soundLetter();
+  mixAnswer.push(mixCurrentLetters[idx]);
+  btn.disabled=true;
+  buildMixAnswer();
+  setTimeout(checkMixComplete,150);
+}
+function checkMixComplete(){
+  const w=mixCurrentWord.word;
+  if(mixAnswer.length<w.length)return;
+  const uw=mixAnswer.join('');
+  const fb=document.getElementById('mixFeedback');
+  const slots=document.querySelectorAll('#mixAnswer .mix-slot');
+  if(uw===w){
+    slots.forEach(function(s){s.classList.add('correct');});
+    soundCorrect();
+    counters.noMistake++;counters.mixCorrect++;
+    let pts=1;
+    if(counters.noMistake%3===0)pts=2;
+    if(mixHintUsed)pts=0;
+    progress.totalScore=(progress.totalScore||0)+pts;
+    saveCounters();saveProgress();
+    document.getElementById('mixScore').textContent=progress.totalScore;
+    fb.className='feedback ok show';
+    fb.textContent=mixHintUsed?'✅ صحيح (بالتلميح)':'✅ +'+pts+' نقطة';
+    const state=STATES[currentStateIndex];
+    if(!progress.completed[state.id])progress.completed[state.id]=[];
+    const wasC=progress.completed[state.id].length>=state.stages;
+    if(progress.completed[state.id].indexOf(mixStageIndex)===-1)progress.completed[state.id].push(mixStageIndex);
+    saveProgress();checkBadges();
+    const nowC=(progress.completed[state.id]||[]).length>=state.stages;
+    setTimeout(function(){
+      mixCurrentLetters=[];
+      if(nowC&&!wasC)showComplete();
+      else backToStages();
+    },1400);
+  }else{
+    soundWrong();
+    slots.forEach(function(s){s.classList.add('wrong');});
+    counters.noMistake=0;saveCounters();
+    progress.totalScore=Math.max(0,(progress.totalScore||0)-2);
+    saveProgress();
+    document.getElementById('mixScore').textContent=progress.totalScore;
+    saveError('خلط: '+w,'الصحيحة: '+w);
+    fb.className='feedback err show';
+    fb.textContent='❌ خاطئة. -2 نقاط';
+    setTimeout(function(){
+      mixAnswer=[];mixCurrentLetters=[];
+      window._mixRevealedCount=0;
+      buildMixAnswer();buildMixLetters();
+      fb.className='feedback';
+    },1400);
+  }
+}
+function useMixHint(){
+  if((progress.totalScore||0)<5){showToast('⚠️ تحتاج 5 نقاط');return;}
+  const w=mixCurrentWord.word;
+  const rc=window._mixRevealedCount||0;
+  if(rc>=w.length){showToast('💡 كل الحروف مكشوفة!');return;}
+  progress.totalScore=Math.max(0,(progress.totalScore||0)-5);
+  saveProgress();
+  document.getElementById('mixScore').textContent=progress.totalScore;
+  soundClick();
+  const nl=w[rc];
+  window._mixRevealedCount=rc+1;
+  mixAnswer[rc]=nl;
+  buildMixAnswer();
+  const lB=document.querySelectorAll('#mixLetters .letter-btn');
+  let found=false;
+  lB.forEach(function(b){
+    if(!found&&!b.disabled&&b.textContent===nl){
+      b.disabled=true;b.style.opacity='0.3';b.style.background='#4CAF50';
+      found=true;
+    }
+  });
+  if(mixAnswer.length>=w.length){setTimeout(checkMixComplete,200);return;}
+  const fb=document.getElementById('mixFeedback');
+  fb.className='feedback info show';
+  fb.textContent='💡 "'+nl+'" ('+window._mixRevealedCount+'/'+w.length+') -5';
+}
+
+/* ============ 29. الإنجاز ============ */
+function showComplete(){
+  soundComplete();
+  const state=STATES[currentStateIndex];
+  showStateAnnounce(lang==='ar'?state.name:state.en,'finish');
+  const el=document.getElementById('completeWilayaName');
+  el.textContent=lang==='ar'?state.name:state.en;
+  el.className='wilaya-name state-name-khaki';
+  const done=(progress.completed[state.id]||[]).length;
+  const percent=Math.round((done/state.stages)*100);
+  let stars='⭐';
+  if(percent>=80)stars='⭐⭐⭐';
+  else if(percent>=50)stars='⭐⭐';
+  document.getElementById('starsEarned').textContent=stars;
+  const streak=updateStreak();
+  document.getElementById('completeStats').innerHTML=
+    '✅ '+done+'/'+state.stages+' مرحلة<br>'+
+    '⭐ '+progress.totalScore+' نقطة<br>'+
+    '📊 '+percent+'%<br>'+
+    '🔥 سلسلة: '+streak+'<br>'+
+    '<span style="color:#7ed321;font-weight:bold;">🌿 '+(lang==='ar'?state.name:state.en)+' كاكي أخضر 🇸🇩</span>';
+  const nb=checkBadges();
+  const bb=document.getElementById('newBadgeBox');
+  bb.innerHTML=nb.length>0?nb.map(function(b){return '<div class="new-badge">🎖️ '+b.icon+' '+b.name+'</div>';}).join(''):'';
+  launchConfetti();
+  setTimeout(function(){
+    const name=prompt('🎉 اسمك:',localStorage.getItem(NAME_KEY)||'طالب');
+    if(name&&name.trim()){
+      localStorage.setItem(NAME_KEY,name.trim().slice(0,20));
+      addToLeaderboard(name.trim().slice(0,20),progress.totalScore||0);
+      updateUserBar();
+    }
+  },600);
+  showScreen('completeScreen');
+}
+function launchConfetti(){
+  const box=document.getElementById('confettiBox');
+  box.innerHTML='';
+  const colors=['#ffd700','#7ed321','#4a7c59','#03a9f4','#ff9800','#9c27b0'];
+  for(let i=0;i<50;i++){
+    const c=document.createElement('div');
+    c.className='confetti';
+    c.style.left=Math.random()*100+'%';
+    c.style.background=colors[Math.floor(Math.random()*colors.length)];
+    c.style.animationDuration=(2+Math.random()*2)+'s';
+    c.style.animationDelay=(Math.random()*0.5)+'s';
+    box.appendChild(c);
+  }
+  }
