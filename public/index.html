@@ -501,3 +501,127 @@ html::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
   </div>
   <div class="lesson-full" id="lessonContent"></div>
                   </div>
+<!-- شاشة الكود -->
+<div id="codeScreen" class="screen zoom-in">
+  <h1 id="codeTitle">🔑 تفعيل الولايات المتقدمة</h1>
+  <p>أدخل الكود المكوّن من 16 خانة</p>
+  <p style="color:#ffd700;font-size:12px;">مثال: SDN03-251201-A7B9F2</p>
+  <input type="text" id="codeInput" placeholder="SDN__-______-______" maxlength="20" autocomplete="off" spellcheck="false">
+  <button class="btn btn-gold" onclick="validateCode()">✅ تحقق من الكود</button>
+  <div id="codeFeedback" style="margin:12px;font-size:14px;min-height:20px;"></div>
+  <div class="info-box">
+    📱 لطلب كود التفعيل:<br>
+    <b>واتساب: +211981084919</b><br>
+    السعر: <b>2000 جنيه / شهرين</b><br>
+    الكود يفتح الولايات من 3 إلى 18
+  </div>
+  <button class="btn btn-blue" style="margin-top:10px;" onclick="showScreen('splash')">↩ رجوع</button>
+</div>
+
+<!-- المكافأة اليومية -->
+<div id="dailyBonusScreen" class="screen zoom-in">
+  <div class="daily-bonus-box">
+    <span class="bonus-icon" id="bonusIcon">🎁</span>
+    <h2 id="bonusTitle">مكافأتك اليومية!</h2>
+    <div class="bonus-amount" id="bonusAmount">+10 نقاط</div>
+    <p id="bonusMessage" style="color:#666;font-size:13px;line-height:1.7;">عد غداً للحصول على المكافأة التالية!</p>
+    <button class="btn btn-green" style="margin-top:16px;width:100%;" onclick="showScreen('splash')">✅ استلمت</button>
+  </div>
+</div>
+
+<!-- الأدمن - تسجيل الدخول -->
+<div id="adminLoginScreen" class="screen zoom-in">
+  <h1>🔐 لوحة الأدمن</h1>
+  <p>أدخل كلمة المرور</p>
+  <input type="password" id="adminPass" placeholder="كلمة المرور" autocomplete="off">
+  <button class="btn btn-gold" onclick="adminLogin()">دخول</button>
+  <div id="adminLoginFeedback" style="margin:12px;color:#ff6b6b;font-size:14px;"></div>
+  <button class="btn btn-blue" style="margin-top:10px;" onclick="showScreen('splash')">↩ رجوع</button>
+</div>
+
+<!-- الأدمن - اللوحة -->
+<div id="adminScreen" class="screen slide-right">
+  <h2>⚙️ توليد الأكواد</h2>
+  <div class="admin-box">
+    <label>اختر الولاية:</label>
+    <select id="adminState">
+      <option value="3">3 - البحر الأحمر</option>
+      <option value="4">4 - كسلا</option>
+      <option value="5">5 - القضارف</option>
+      <option value="6">6 - الخرطوم</option>
+      <option value="7">7 - الجزيرة</option>
+      <option value="8">8 - النيل الأزرق</option>
+      <option value="9">9 - سنار</option>
+      <option value="10">10 - النيل الأبيض</option>
+      <option value="11">11 - شمال كردفان</option>
+      <option value="12">12 - جنوب كردفان</option>
+      <option value="13">13 - غرب كردفان</option>
+      <option value="14">14 - شمال دارفور</option>
+      <option value="15">15 - غرب دارفور</option>
+      <option value="16">16 - وسط دارفور</option>
+      <option value="17">17 - شرق دارفور</option>
+      <option value="18">18 - جنوب دارفور</option>
+      <option value="ALL">🔓 كل الولايات (3-18)</option>
+    </select>
+  </div>
+  <div class="admin-box">
+    <label>مدة الصلاحية (بالأيام):</label>
+    <input type="number" id="adminDays" value="60" min="1" max="365">
+  </div>
+  <button class="btn btn-gold" onclick="generateCode()" style="width:100%;">🎲 توليد كود</button>
+  <div id="generatedCodeBox"></div>
+  <div class="admin-box" style="margin-top:12px;">
+    <label>📋 الأكواد المُصدرة:</label>
+    <div id="issuedCodesList" style="font-size:11px;font-family:monospace;color:#0f0;max-height:160px;overflow-y:auto;"></div>
+  </div>
+  <button class="btn btn-red" onclick="clearIssuedCodes()" style="width:100%;margin-bottom:8px;">🗑️ حذف سجل الأكواد</button>
+  <button class="btn btn-blue" onclick="showScreen('splash')" style="width:100%;">↩ رجوع</button>
+</div>
+
+<!-- Modal الاسم -->
+<div id="nameModal" class="modal">
+  <div class="modal-content">
+    <h3>🎉 أنت في القمة!</h3>
+    <p style="color:#666;font-size:13px;margin-bottom:12px;">أدخل اسمك لتسجيل النتيجة</p>
+    <input type="text" id="playerNameInput" placeholder="اسمك" maxlength="20">
+    <button class="btn btn-green" onclick="savePlayerName()" style="width:100%;">💾 حفظ</button>
+  </div>
+</div>
+
+<button class="whatsapp-float" onclick="openWhatsApp()">💬</button>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ 1. الترجمة ============ */
+const T={
+ar:{splashTitle:'رحلة التكاثر',splashSub1:'علم الأحياء - الصف الثالث الثانوي',splashSub2:'المنهج السوداني 2026',splashDesc:'350 مرحلة | 18 ولاية | فكّر.. تعلّم.. ارتقِ',btnStart:'▶ ابدأ اللعب',btnQuick:'⚡ التحدي السريع (50 سؤال)',btnError:'📝 دفتر الأخطاء',btnBadges:'🎖️ شارات الإنجاز',btnDailyBonus:'🎁 المكافأة اليومية',btnLB:'🏆 لوحة الصدارة',btnLib:'📚 مكتبة الدروس',btnCode:'🔑 إدخال كود التفعيل',lblScore:'⭐ النقاط',lblBack:'◀ رجوع',compTitle:'🎉 أكملت الولاية!',btnMap:'🗺️ العودة للخريطة',btnShare:'📤 شارك النتيجة',lbTitle:'🏆 لوحة الصدارة',splashFooter:'للتواصل واتساب: +211981084919<br>الكود 2000 جنيه / شهرين',lbEmpty:'لا توجد نتائج بعد 🎯<br>العب الآن وسجّل اسمك!',btnHint:'💡 تلميح (-5)',btnBack2:'↩ رجوع',codeTitle:'🔑 تفعيل الولايات المتقدمة'},
+en:{splashTitle:'Reproduction Journey',splashSub1:'Biology - 3rd Secondary',splashSub2:'Sudanese Curriculum 2026',splashDesc:'350 Stages | 18 States',btnStart:'▶ Start',btnQuick:'⚡ Quick Challenge',btnError:'📝 Error Notebook',btnBadges:'🎖️ Badges',btnDailyBonus:'🎁 Daily Bonus',btnLB:'🏆 Leaderboard',btnLib:'📚 Lessons',btnCode:'🔑 Enter Code',lblScore:'⭐ Score',lblBack:'◀ Back',compTitle:'🎉 State Completed!',btnMap:'🗺️ Back to Map',btnShare:'📤 Share',lbTitle:'🏆 Leaderboard',splashFooter:'WhatsApp: +211981084919',lbEmpty:'No results yet!',btnHint:'💡 Hint (-5)',btnBack2:'↩ Back',codeTitle:'🔑 Activate States'}
+};
+let lang=localStorage.getItem('game_lang')||'ar';
+function t(k){return (T[lang]&&T[lang][k])||k;}
+
+/* ============ 2. الولايات (18 ولاية = 350 مرحلة) ============ */
+const STATES=[
+{id:'northern',name:'الشمالية',en:'Northern',x:520,y:120,stages:20},
+{id:'river_nile',name:'نهر النيل',en:'River Nile',x:640,y:150,stages:20},
+{id:'red_sea',name:'البحر الأحمر',en:'Red Sea',x:750,y:250,stages:20},
+{id:'kassala',name:'كسلا',en:'Kassala',x:700,y:340,stages:20},
+{id:'gedaref',name:'القضارف',en:'Gedaref',x:620,y:430,stages:20},
+{id:'khartoum',name:'الخرطوم',en:'Khartoum',x:530,y:290,stages:20},
+{id:'jazira',name:'الجزيرة',en:'Al Jazirah',x:570,y:370,stages:20},
+{id:'blue_nile',name:'النيل الأزرق',en:'Blue Nile',x:550,y:470,stages:20},
+{id:'sennar',name:'سنار',en:'Sennar',x:480,y:520,stages:19},
+{id:'white_nile',name:'النيل الأبيض',en:'White Nile',x:440,y:410,stages:19},
+{id:'n_kordofan',name:'شمال كردفان',en:'N. Kordofan',x:370,y:280,stages:19},
+{id:'s_kordofan',name:'جنوب كردفان',en:'S. Kordofan',x:360,y:420,stages:19},
+{id:'w_kordofan',name:'غرب كردفان',en:'W. Kordofan',x:270,y:350,stages:19},
+{id:'n_darfur',name:'شمال دارفور',en:'N. Darfur',x:190,y:230,stages:19},
+{id:'w_darfur',name:'غرب دارفور',en:'W. Darfur',x:130,y:330,stages:19},
+{id:'c_darfur',name:'وسط دارفور',en:'C. Darfur',x:210,y:390,stages:19},
+{id:'e_darfur',name:'شرق دارفور',en:'E. Darfur',x:270,y:440,stages:19},
+{id:'s_darfur',name:'جنوب دارفور',en:'S. Darfur',x:220,y:510,stages:19}
+];
+let _acc=1;
+STATES.forEach(function(s){s.start=_acc;s.end=_acc+s.stages-1;_acc=s.end+1;});
+const TOTAL_STAGES=350;
+const FREE_STATES=2;
