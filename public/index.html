@@ -434,3 +434,70 @@ html::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
     <button class="btn btn-blue" onclick="backToStages()">↩ رجوع</button>
   </div>
     </div>
+<!-- شاشة الإنجاز -->
+<div id="completeScreen" class="screen zoom-in">
+  <div id="confettiBox"></div>
+  <div class="complete-trophy">🏆</div>
+  <h1 id="compTitle">🎉 أكملت الولاية! 🎉</h1>
+  <div class="wilaya-name" id="completeWilayaName">الولاية</div>
+  <div class="stars-earned" id="starsEarned">⭐⭐⭐</div>
+  <div class="complete-stats" id="completeStats"></div>
+  <div id="newBadgeBox"></div>
+  <button class="btn btn-green" style="margin-top:14px;max-width:280px;position:relative;z-index:1;" onclick="goToMap()" id="btnMap">🗺️ العودة للخريطة</button>
+  <button class="btn btn-gold" style="margin-top:6px;max-width:280px;position:relative;z-index:1;" onclick="shareOnWhatsApp()" id="btnShare">📤 شارك النتيجة</button>
+</div>
+
+<!-- لوحة الصدارة -->
+<div id="leaderboardScreen" class="screen slide-right">
+  <h2 id="lbTitle">🏆 لوحة الصدارة</h2>
+  <div id="leaderboardList"></div>
+  <button class="btn btn-blue" style="margin-top:14px;max-width:280px;align-self:center;" onclick="showScreen('splash')" id="btnLbBack">↩ رجوع</button>
+</div>
+
+<!-- التحدي السريع -->
+<div id="quickScreen" class="screen zoom-in">
+  <h1 id="quickTitle" style="color:#ffd700;font-size:22px;">⚡ التحدي السريع</h1>
+  <div style="background:linear-gradient(135deg,#ffd700,#ff9800);color:#333;padding:6px 16px;border-radius:20px;font-weight:bold;margin:8px;font-size:12px;" id="quickProgress">0/50</div>
+  <div class="quick-box" id="quickContent"></div>
+  <button class="btn btn-purple" onclick="showScreen('splash')" id="btnQuickBack">↩ رجوع</button>
+</div>
+
+<!-- دفتر الأخطاء -->
+<div id="errorScreen" class="screen slide-right">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('splash')">◀ رجوع</button>
+    <span>📝 دفتر الأخطاء</span>
+    <button class="back-btn" onclick="clearErrors()">🗑️ حذف</button>
+  </div>
+  <div id="errorList" style="margin-top:8px;"></div>
+</div>
+
+<!-- الشارات -->
+<div id="badgesScreen" class="screen slide-right">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('splash')">◀ رجوع</button>
+    <span>🎖️ شارات الإنجاز</span>
+    <span></span>
+  </div>
+  <div class="badge-grid" id="badgeGrid" style="margin-top:8px;"></div>
+</div>
+
+<!-- المكتبة -->
+<div id="libraryScreen" class="screen slide-right">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('splash')">◀ رجوع</button>
+    <span>📚 مكتبة الدروس</span>
+    <span></span>
+  </div>
+  <div id="libraryList" style="margin-top:6px;"></div>
+</div>
+
+<!-- تفاصيل الدرس -->
+<div id="lessonDetailScreen" class="screen slide-right">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showLibrary()">◀ رجوع للمكتبة</button>
+    <span id="lessonTitleBar">الدرس</span>
+    <span></span>
+  </div>
+  <div class="lesson-full" id="lessonContent"></div>
+                  </div>
