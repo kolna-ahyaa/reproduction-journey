@@ -357,3 +357,80 @@ html::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
   </div>
   <div class="stage-list" id="stageList"></div>
   </div>
+<!-- شاشة MCQ -->
+<div id="gameScreen" class="screen slide-right">
+  <div class="game-header">
+    <span id="gameState">الولاية</span>
+    <span>مرحلة <b id="gameStage">1</b></span>
+    <span>⭐ <b id="gameScore">0</b></span>
+    <span>🔥 <b id="gameStreak">0</b></span>
+  </div>
+  <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+  <div class="question-card" id="questionCard">
+    <span class="question-icon" id="questionIcon">🧬</span>
+    <div class="question-text" id="questionText">جاري التحميل...</div>
+  </div>
+  <div class="options" id="optionsContainer"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="bottom-bar">
+    <button class="btn btn-gold" onclick="useHint()" id="btnHint">💡 تلميح (-5)</button>
+    <button class="btn btn-blue" onclick="backToStages()" id="btnBack2">↩ رجوع</button>
+  </div>
+</div>
+
+<!-- شاشة خلط الحروف -->
+<div id="mixScreen" class="screen slide-right">
+  <div class="game-header">
+    <span id="mixState">الولاية</span>
+    <span>مرحلة <b id="mixStage">1</b></span>
+    <span>⭐ <b id="mixScore">0</b></span>
+    <span>🔥 <b id="mixStreak">0</b></span>
+  </div>
+  <div class="mix-image-card">
+    <div class="mix-icon" id="mixIcon">🧬</div>
+    <div class="mix-hint" id="mixHint">اكتب الكلمة الصحيحة</div>
+  </div>
+  <div class="mix-answer" id="mixAnswer"></div>
+  <div class="mix-letters" id="mixLetters"></div>
+  <div class="feedback" id="mixFeedback"></div>
+  <div class="bottom-bar">
+    <button class="btn btn-gold" onclick="useMixHint()" id="btnMixHint">💡 تلميح (-5)</button>
+    <button class="btn btn-blue" onclick="backToStages()" id="btnMixBack">↩ رجوع</button>
+  </div>
+</div>
+
+<!-- شاشة صح/خطأ -->
+<div id="tfScreen" class="screen slide-right">
+  <div class="game-header">
+    <span id="tfState">الولاية</span>
+    <span>مرحلة <b id="tfStage">1</b></span>
+    <span>⭐ <b id="tfScore">0</b></span>
+  </div>
+  <div class="tf-card">
+    <span class="tf-icon" id="tfIcon">✅</span>
+    <div class="tf-statement" id="tfStatement">جاري التحميل...</div>
+  </div>
+  <div class="tf-buttons">
+    <button class="tf-btn tf-true" id="tfTrueBtn" onclick="answerTF(true)">✅ صح</button>
+    <button class="tf-btn tf-false" id="tfFalseBtn" onclick="answerTF(false)">❌ خطأ</button>
+  </div>
+  <div class="feedback" id="tfFeedback"></div>
+  <div class="bottom-bar">
+    <button class="btn btn-blue" onclick="backToStages()">↩ رجوع</button>
+  </div>
+</div>
+
+<!-- شاشة الترتيب -->
+<div id="orderScreen" class="screen slide-right">
+  <div class="game-header">
+    <span id="orderState">الولاية</span>
+    <span>مرحلة <b id="orderStage">1</b></span>
+    <span>⭐ <b id="orderScore">0</b></span>
+  </div>
+  <div class="order-title" id="orderQuestion">اضغط على الخطوات بالترتيب الصحيح</div>
+  <div class="order-list" id="orderList"></div>
+  <div class="feedback" id="orderFeedback"></div>
+  <div class="bottom-bar">
+    <button class="btn btn-blue" onclick="backToStages()">↩ رجوع</button>
+  </div>
+    </div>
