@@ -1,4 +1,4 @@
-/* style.css - التنسيق الكامل لمنصة كلنا أحياء */
+/* style.css - التنسيق المطور لمنصة كلنا أحياء V2 */
 
 /* 1. إعدادات الخطوط والصفحة العامة */
 @import url('https://googleapis.com');
@@ -17,29 +17,189 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    padding: 15px;
+    padding: 12px;
 }
 
-/* 2. الحاوية الرئيسية للاختبار */
+/* الحاوية الرئيسية */
 .quiz-container {
-    background: #14223a; /* أزرق داكن متوسط لجسم الحاوية */
+    background: #14223a;
     width: 100%;
-    max-width: 500px; /* مثالي لشاشات الهواتف والأجهزة اللوحية */
+    max-width: 480px; /* تصميم مثالي للهواتف المحمولة */
     border-radius: 20px;
-    padding: 24px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     border: 1px solid #1e365d;
+    position: relative;
+    overflow: hidden;
 }
 
-/* 3. الهيدر وشريط التقدم */
+/* العناوين المساعدة */
+.main-title {
+    font-size: 1.6rem;
+    color: #ffffff;
+    text-align: center;
+    margin-bottom: 6px;
+}
+
+.section-subtitle {
+    font-size: 0.95rem;
+    color: #94a3b8;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* 2. تصميم بطاقات شاشة اختيار الأبواب */
+.chapters-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 10px;
+}
+
+.chapter-card {
+    background: #1e293b;
+    border: 2px solid #334155;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.chapter-card.open {
+    border-color: #1e365d;
+}
+
+.chapter-card.open:active {
+    background: #1e365d;
+    transform: scale(0.98);
+}
+
+.chapter-card.locked {
+    opacity: 0.75;
+    background: #111a2e;
+    border-color: #1e293b;
+}
+
+.chapter-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.chapter-icon {
+    font-size: 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 8px;
+    border-radius: 12px;
+}
+
+.chapter-details h3 {
+    font-size: 1.1rem;
+    color: #ffffff;
+    margin-bottom: 4px;
+}
+
+.chapter-details p {
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+/* شارات الحالة داخل البطاقات */
+.status-badge {
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+}
+
+.status-open {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+}
+
+.status-locked {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+}
+
+/* 3. شاشة اختيار المواضيع الدقيقة */
+.screen-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #1e365d;
+    padding-bottom: 12px;
+}
+
+.back-link {
+    background: none;
+    border: none;
+    color: #38bdf8;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.topics-control {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 12px;
+}
+
+.btn-outline {
+    background: none;
+    border: 1px solid #334155;
+    color: #cbd5e1;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.topics-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 280px; /* تمكين التمرير الداخلي في الهواتف */
+    overflow-y: auto;
+    margin-bottom: 20px;
+    padding-right: 4px;
+}
+
+/* تنسيق عناصر الاختيار (Checkboxes المخصصة) */
+.topic-item {
+    background: #1e293b;
+    border: 1px solid #334155;
+    padding: 12px 14px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.topic-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #3b82f6; /* لون المؤشر أزرق */
+    cursor: pointer;
+}
+
+/* 4. عداد النقاط المباشر والامتحان */
 .quiz-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
-    font-size: 0.9rem;
-    color: #94a3b8;
-    font-weight: 500;
+    margin-bottom: 14px;
 }
 
 #exam-year {
@@ -48,6 +208,35 @@ body {
     padding: 4px 10px;
     border-radius: 8px;
     font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.live-score-board {
+    display: flex;
+    gap: 8px;
+}
+
+.score-tag {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.correct-tag {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.wrong-tag {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.progress-section {
+    margin-bottom: 20px;
 }
 
 .progress-bar-container {
@@ -55,196 +244,210 @@ body {
     height: 8px;
     background-color: #1e293b;
     border-radius: 10px;
-    margin-bottom: 24px;
+    margin-bottom: 6px;
     overflow: hidden;
 }
 
 #progress-fill {
     height: 100%;
-    width: 0%; /* سيتغير بالـ JS */
+    width: 0%;
     background: linear-gradient(90deg, #3b82f6, #06b6d4);
     border-radius: 10px;
     transition: width 0.3s ease;
 }
 
-/* 4. صندوق السؤال */
-.question-box {
-    margin-bottom: 24px;
+#question-counter {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    display: block;
+    text-align: left;
 }
 
+/* صندوق الأسئلة والخيارات */
 .topic-badge {
     display: inline-block;
     background: rgba(234, 179, 8, 0.1);
-    color: #eab308; /* لون ذهبي نيون للفرع */
+    color: #eab308;
     padding: 4px 12px;
     border-radius: 20px;
     font-size: 0.8rem;
     font-weight: 700;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     border: 1px solid rgba(234, 179, 8, 0.2);
 }
 
 #question-text {
-    font-size: 1.25rem;
-    line-height: 1.6;
+    font-size: 1.2rem;
+    line-height: 1.5;
     color: #ffffff;
     font-weight: 700;
 }
 
-/* 5. بطاقات خيارات الإجابة */
 .options-grid {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin-bottom: 24px;
+    gap: 10px;
+    margin-bottom: 20px;
 }
 
 .option-card {
     background: #1e293b;
     border: 2px solid #334155;
-    border-radius: 14px;
-    padding: 16px;
-    font-size: 1.05rem;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 1rem;
     color: #cbd5e1;
     cursor: pointer;
     text-align: right;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    font-weight: 500;
-    -webkit-tap-highlight-color: transparent; /* يمنع الوميض الأزرق على الهواتف */
-}
-
-/* تأثير اللمس أو المرور */
-@media (hover: hover) {
-    .option-card:hover {
-        border-color: #3b82f6;
-        background: #1e365d;
-        color: #fff;
-    }
-}
-
-.option-card:active {
-    transform: scale(0.98);
-}
-
-/* حالات الإجابة (تضاف بالـ JS) */
-.option-card.selected {
-    border-color: #3b82f6;
-    background: rgba(59, 130, 246, 0.15);
-    color: #60a5fa;
+    transition: all 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .option-card.correct {
-    border-color: #22c55e !important; /* أخضر للإجابة الصحيحة */
+    border-color: #22c55e !important;
     background: rgba(34, 197, 94, 0.15) !important;
     color: #4ade80 !important;
     font-weight: 700;
 }
 
 .option-card.wrong {
-    border-color: #ef4444 !important; /* أحمر للإجابة الخاطئة */
+    border-color: #ef4444 !important;
     background: rgba(239, 68, 68, 0.15) !important;
     color: #f87171 !important;
 }
 
-/* 6. أزرار التحكم والـ Footer */
-.quiz-footer {
+/* أزرار التحكم السفلية المدمجة */
+.quiz-controls-footer {
     display: flex;
-    justify-content: flex-end;
+    gap: 12px;
 }
 
 .btn {
-    width: 100%;
-    padding: 14px;
+    padding: 12px;
     border: none;
     border-radius: 12px;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
-}
-
-#next-btn {
-    background: #eab308; /* زر ذهبي جذاب */
-    color: #0f172a;
-}
-
-#next-btn:not(.disabled):active {
-    transform: scale(0.95);
-    background: #ca8a04;
-}
-
-.btn.disabled {
-    background: #334155 !important;
-    color: #64748b !important;
-    cursor: not-allowed;
-    opacity: 0.6;
-}
-
-/* 7. شاشة النتيجة الاحتفالية */
-#result-screen {
-    text-align: center;
-    padding: 10px 0;
-}
-
-.result-card {
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
 }
 
-.result-icon {
-    font-size: 4rem;
-    margin-bottom: 16px;
-    animation: bounce 2s infinite alternate;
+#skip-btn {
+    background-color: #334155;
+    color: #e2e8f0;
+    flex: 1; /* زر التخطي يأخذ مساحة مرنة */
 }
 
-#result-screen h2 {
-    font-size: 1.6rem;
-    color: #ffffff;
-    margin-bottom: 10px;
+#next-btn {
+    background-color: #eab308;
+    color: #0f172a;
+    flex: 1.5; /* زر التالي يكون أكبر قليلاً */
 }
 
-.result-text {
-    color: #94a3b8;
-    margin-bottom: 24px;
-    font-size: 1rem;
+.btn.disabled {
+    background: #1e293b !important;
+    color: #475569 !important;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* أزرار الحالات الخاصة */
+.btn-primary { background: #3b82f6; color: #fff; width: 100%; }
+.btn-success { background: #22c55e; color: #fff; width: 100%; }
+.btn-danger { background: #ef4444; color: #fff; width: 100%; }
+.button-group { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 15px; }
+
+/* 5. شاشة خيار الاستئناف وشاشة النتيجة */
+.card-content {
+    text-align: center;
+}
+
+.screen-icon {
+    font-size: 3.5rem;
+    margin-bottom: 12px;
 }
 
 .score-box {
     background: rgba(6, 182, 212, 0.1);
     border: 1px solid rgba(6, 182, 212, 0.2);
     border-radius: 16px;
-    padding: 20px;
+    padding: 16px;
     width: 100%;
-    margin-bottom: 28px;
-}
-
-.score-label {
-    display: block;
-    color: #94a3b8;
-    font-size: 0.95rem;
-    margin-bottom: 8px;
+    margin-bottom: 20px;
+    text-align: center;
 }
 
 #final-score {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
     font-weight: 700;
-    color: #06b6d4; /* لون سيريان مبهج ومميز النتيجة */
+    color: #06b6d4;
 }
 
-#restart-btn {
-    background: #22c55e; /* زر إعادة أخضر */
-    color: #ffffff;
+/* 6. تصميم النافذة المنبثقة للتفعيل (Modal) */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    z-index: 1000;
+}
+
+.modal-box {
+    background: #14223a;
+    border: 1px solid #1e365d;
+    width: 100%;
+    max-width: 380px;
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+.modal-box h3 {
+    margin-bottom: 8px;
+    font-size: 1.25rem;
+}
+
+.modal-box p {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    margin-bottom: 16px;
+}
+
+.modal-input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 2px solid #334155;
+    background: #1e293b;
+    color: #fff;
+    font-size: 1rem;
+    text-align: center;
+    margin-bottom: 16px;
+    outline: none;
+}
+
+.modal-input:focus {
+    border-color: #3b82f6;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.modal-buttons .btn {
+    flex: 1;
 }
 
 /* الأدوات المساعدة */
-.hidden {
-    display: none !important;
-}
-
-@keyframes bounce {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(-10px); }
-}
+.hidden { display: none !important; }
