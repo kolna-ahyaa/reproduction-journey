@@ -267,7 +267,6 @@ document.getElementById('select-all-topics').onclick = () => {
     const allChecked = Array.from(checkboxes).every(cb => cb.checked);
     checkboxes.forEach(cb => cb.checked = !allChecked);
 };
-
 document.getElementById('start-filtered-quiz').onclick = () => {
     playSystemSound('click');
     startQuiz(false);
@@ -277,4 +276,26 @@ document.getElementById('resume-btn').onclick = () => {
     playSystemSound('click');
     startQuiz(true);
 };
+// 11. تشغيل التطبيق عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+    checkSavedProgress();
+});
 
+// ربط زر (البدء من جديد) في شاشة الاستئناف
+document.getElementById('clear-save-btn').onclick = () => {
+    playSystemSound('click');
+    localStorage.removeItem('kolona_ahya_save');
+    initApp();
+};
+
+// ربط زر (العودة للقائمة الرئيسية) في شاشة النتيجة
+document.getElementById('restart-btn').onclick = () => {
+    playSystemSound('click');
+    initApp();
+};
+
+// إغلاق نافذة التفعيل (Modal) عند الضغط على إلغاء
+document.getElementById('activate-close-btn').onclick = () => {
+    playSystemSound('click');
+    activationModal.classList.add('hidden');
+};
