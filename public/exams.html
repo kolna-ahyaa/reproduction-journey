@@ -3,66 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة كلنا أحياء - مركز الامتحانات</title>
-    <!-- سنربط ملف الـ CSS هنا في الخطوة القادمة -->
+    <title>منصة كلنا أحياء V2 - مركز الامتحانات الاحترافي</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- الحاوية الرئيسية للعبة/الامتحان -->
+    <!-- الحاوية الرئيسية للمنصة -->
     <div class="quiz-container">
+
+        <!-- 1. شاشة خيار الاستئناف من التخزين المحلي (تظهر عند وجود حفظ سابق) -->
+        <div id="resume-screen" class="hidden">
+            <div class="card-content">
+                <div class="screen-icon">💾</div>
+                <h2>يوجد اختبار غير مكتمل!</h2>
+                <p>لقد عثرنا على حفظ تلقائي لجلسة سابقة، هل ترغب في مواصلة المذاكرة من حيث توقفت؟</p>
+                <div class="button-group">
+                    <button id="resume-btn" class="btn btn-success">استئناف الاختبار ⏭️</button>
+                    <button id="clear-save-btn" class="btn btn-danger">البدء من جديد 🔄</button>
+                </div>
+            </div>
+        </div>
         
-        <!-- شاشة اللعب والأسئلة -->
-        <div id="quiz-screen">
-            <!-- الهيدر: يحتوي على السنة التنافسية والمجموع -->
+        <!-- 2. شاشة اختيار الأبواب الرئيسية (Chapter Selection) -->
+        <div id="chapters-screen">
+            <h1 class="main-title">مركز الامتحانات 🎯</h1>
+            <p class="section-subtitle">اختر الباب الأكاديمي لتبدأ التدريب:</p>
+            
+            <div class="chapters-grid">
+                <!-- باب التكاثر (مفتوح مجاناً) -->
+                <div class="chapter-card open" id="chapter-reproduction">
+                    <div class="chapter-info">
+                        <span class="chapter-icon">🌱</span>
+                        <div class="chapter-details">
+                            <h3>باب التكاثر</h3>
+                            <p>متاح مجاناً بالكامل (20 سؤالاً تنافسياً)</p>
+                        </div>
+                    </div>
+                    <span class="status-badge status-open">مفتوح ✨</span>
+                </div>
+
+                <!-- باب الوراثة (مقفل) -->
+                <div class="chapter-card locked" data-msg="هذا الباب يتطلب كود تفعيل لتشغيله">
+                    <div class="chapter-info">
+                        <span class="chapter-icon">🧬</span>
+                        <div class="chapter-details">
+                            <h3>باب الوراثة</h3>
+                            <p>أسئلة سنوات الشهادة والتجريبي</p>
+                        </div>
+                    </div>
+                    <span class="status-badge status-locked">🔒 مقفل</span>
+                </div>
+
+                <!-- باب النظام البيئي (مقفل) -->
+                <div class="chapter-card locked" data-msg="هذا الباب يتطلب كود تفعيل لتشغيله">
+                    <div class="chapter-info">
+                        <span class="chapter-icon">🌍</span>
+                        <div class="chapter-details">
+                            <h3>باب النظام البيئي</h3>
+                            <p>مراجعات شاملة طبقاً للمقرر السوداني</p>
+                        </div>
+                    </div>
+                    <span class="status-badge status-locked">🔒 مقفل</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. شاشة اختيار المواضيع الدقيقة (Sub-Topics Selection) -->
+        <div id="topics-screen" class="hidden">
+            <div class="screen-header">
+                <button id="back-to-chapters" class="back-link">⬅️ العودة للأبواب</button>
+                <h2>مواضيع باب التكاثر 📑</h2>
+            </div>
+            <p class="section-subtitle">حدد المواضيع التي درستها فقط لتصفية الأسئلة:</p>
+            
+            <!-- حاوية الاختيار الشامل وعرض الخيارات -->
+            <div class="topics-control">
+                <button id="select-all-topics" class="btn-outline">تحديد الكل ✅</button>
+            </div>
+            <div id="topics-list-container" class="topics-list">
+                <!-- ستتولد المواضيع هنا برمجياً بـ Checkboxes عبر الـ JS من حقل topic -->
+            </div>
+            <button id="start-filtered-quiz" class="btn btn-primary">ابدأ التدريب الآن 🚀</button>
+        </div>
+
+        <!-- 4. شاشة الامتحان والأسئلة (Quiz Screen) -->
+        <div id="quiz-screen" class="hidden">
+            <!-- الهيدر: يحتوي على السنة التنافسية وعداد الـ Live Score النقاط المباشر -->
             <div class="quiz-header">
-                <span id="exam-year">جاري التحميل...</span>
+                <span id="exam-year">تحميل...</span>
+                <div class="live-score-board">
+                    <span class="score-tag correct-tag">✅ <strong id="live-correct">0</strong></span>
+                    <span class="score-tag wrong-tag">❌ <strong id="live-wrong">0</strong></span>
+                </div>
+            </div>
+
+            <!-- شريط التقدم ومؤشر الأعداد -->
+            <div class="progress-section">
+                <div class="progress-bar-container">
+                    <div id="progress-fill"></div>
+                </div>
                 <span id="question-counter">السؤال: 0 / 0</span>
             </div>
 
-            <!-- شريط التقدم العلوي -->
-            <div class="progress-bar-container">
-                <div id="progress-fill"></div>
-            </div>
-
-            <!-- صندوق السؤال -->
+            <!-- صندوق السؤال والموضوع الفرعي -->
             <div class="question-box">
-                <span id="question-topic" class="topic-badge">باب التكاثر</span>
+                <span id="question-topic" class="topic-badge">تكاثر</span>
                 <h2 id="question-text">جاري تحميل السؤال...</h2>
             </div>
 
             <!-- حاوية خيارات الإجابة -->
             <div id="options-container" class="options-grid">
-                <!-- الخيارات ستتولد هنا ديناميكياً بواسطة الـ JavaScript -->
+                <!-- تتولد ديناميكياً -->
             </div>
 
-            <!-- منطقة التحكم والأزرار -->
-            <div class="quiz-footer">
+            <!-- منطقة التحكم السفلية: تحتوي على زر تخطي وزر التالي بجانب بعضهما -->
+            <div class="quiz-controls-footer">
+                <button id="skip-btn" class="btn btn-secondary">⏭️ لم ندرسه بعد</button>
                 <button id="next-btn" class="btn disabled" disabled>السؤال التالي</button>
             </div>
         </div>
 
-        <!-- شاشة النتيجة النهائية (تكون مخفية في البداية) -->
+        <!-- 5. شاشة النتيجة النهائية (Result Screen) -->
         <div id="result-screen" class="hidden">
             <div class="result-card">
                 <div class="result-icon">🏆</div>
                 <h2>انتهى الاختبار!</h2>
-                <p class="result-text">لقد أكملت أول 20 سؤالاً من امتحانات الشهادة الثانوية.</p>
+                <p class="result-text">لقد أكملت جلسة المذاكرة الحالية بنجاح.</p>
                 
-                <!-- صندوق الدرجة -->
                 <div class="score-box">
-                    <span class="score-label">درجتك هي:</span>
-                    <span id="final-score">0 / 20</span>
+                    <span class="score-label">درجتك النهائية:</span>
+                    <span id="final-score">0 / 0</span>
                 </div>
-
-                <!-- زر إعادة المحاولة -->
-                <button id="restart-btn" class="btn btn-primary">إعادة الاختبار 🔄</button>
+                <button id="restart-btn" class="btn btn-success">العودة للقائمة الرئيسية 🏠</button>
             </div>
         </div>
 
     </div>
 
-    <!-- ربط ملفات الـ JavaScript (ملف البيانات وملف التحكم) -->
+    <!-- النافذة المنبثقة للأبواب المقفلة (Modal) -->
+    <div id="activation-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h3>تفعيل الباب التنافسي 🔒</h3>
+            <p id="modal-message-text">هذا الباب يتطلب كود تفعيل.</p>
+            <input type="text" id="activation-code-input" placeholder="أدخل كود التفعيل هنا..." class="modal-input">
+            <div class="modal-buttons">
+                <button id="activate-submit-btn" class="btn btn-primary">تفعيل</button>
+                <button id="activate-close-btn" class="btn btn-secondary">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- الأكواد البرمجية (ملف الأسئلة، وملف التوجيه والتحكم) -->
     <script src="exams.js"></script>
     <script src="app.js"></script>
 </body>
