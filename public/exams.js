@@ -280,7 +280,6 @@ const examsData = [
     answer: 3, // كل ما ذكر صحيح
     image: null
   }, 
-];
 // exams.js - الدفعة الثانية (الأسئلة من 21 إلى 40)
   {
     id: 21,
