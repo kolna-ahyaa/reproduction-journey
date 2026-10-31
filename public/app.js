@@ -280,4 +280,113 @@ function showFinalResult() {
     resultScreen.classList.remove('hidden');
     
     const scorePercentage = (liveCorrectCount / filteredQuestions.length) * 100;
+    // استكمال دالة عرض النتيجة وتوزيع النجوم
+    const starsRating = document.getElementById('stars-rating');
+    const performanceText = document.getElementById('performance-text');
     
+    if (scorePercentage >= 90) {
+        starsRating.textContent = "⭐⭐⭐";
+        performanceText.textContent = "أسطورة! 🏆";
+        performanceText.className = "performance-badge badge-legend";
+        startConfetti(); // تشغيل الورق الملون
+    } else if (scorePercentage >= 50) {
+        starsRating.textContent = "⭐⭐";
+        performanceText.textContent = "عمل جيد! 💪";
+        performanceText.className = "performance-badge badge-good";
+    } else {
+        starsRating.textContent = "⭐";
+        performanceText.textContent = "يحتاج مراجعة 📚";
+        performanceText.className = "performance-badge badge-review";
+    }
+    
+    document.getElementById('final-score').textContent = `${liveCorrectCount} / ${filteredQuestions.length}`;
+    localStorage.removeItem('kolona_ahya_save'); // تصفير الحفظ بعد النتيجة
+}
+
+// 10. نظام الاحتفال (Confetti) برمجياً
+function startConfetti() {
+    confettiCanvas.classList.remove('hidden');
+    const ctx = confettiCanvas.getContext('2d');
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+    let particles = [];
+    
+    for(let i = 0; i < 100; i++) {
+        particles.push({
+            x: Math.random() * confettiCanvas.width,
+            y: Math.random() * confettiCanvas.height - confettiCanvas.height,
+            w: Math.random() * 10 + 5,
+            h: Math.random() * 10 + 5,
+            c: ['#eab308', '#3b82f6', '#22c55e', '#ef4444', '#ec4899'][Math.floor(Math.random() * 5)],
+            vx: Math.random() * 4 - 2,
+            vy: Math.random() * 5 + 2
+        });
+    }
+    
+    function update() {
+        ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            ctx.fillStyle = p.c;
+            ctx.fillRect(p.x, p.y, p.w, p.h);
+            if (p.y > confettiCanvas.height) p.y = -10;
+        });
+        confettiAnimationId = requestAnimationFrame(update);
+    }
+    update();
+}
+
+function stopConfetti() {
+    if (confettiAnimationId) {
+        cancelAnimationFrame(confettiAnimationId);
+        confettiAnimationId = null;
+    }
+    confettiCanvas.classList.add('hidden');
+    const ctx = confettiCanvas.getContext('2d');
+    ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+}
+
+// 11. ربط أزرار التحكم المتبقية وتشغيل التطبيق
+document.getElementById('back-to-chapters').onclick = () => {
+    playSystemSound('click');
+    initApp();
+};
+
+document.getElementById('select-all-topics').onclick = () => {
+    playSystemSound('click');
+    const checkboxes = document.querySelectorAll('.topic-checkbox');
+    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    checkboxes.forEach(cb => cb.checked = !allChecked);
+};
+
+document.getElementById('start-filtered-quiz').onclick = () => {
+    playSystemSound('click');
+    startQuiz(false);
+};
+
+document.getElementById('resume-btn').onclick = () => {
+    playSystemSound('click');
+    startQuiz(true);
+};
+
+document.getElementById('clear-save-btn').onclick = () => {
+    playSystemSound('click');
+    localStorage.removeItem('kolona_ahya_save');
+    initApp();
+};
+
+document.getElementById('restart-btn').onclick = () => {
+    playSystemSound('click');
+    initApp();
+};
+
+document.getElementById('activate-close-btn').onclick = () => {
+    playSystemSound('click');
+    activationModal.classList.add('hidden');
+};
+
+// تشغيل التطبيق عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+    checkSavedProgress();
+});    
