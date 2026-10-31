@@ -91,6 +91,7 @@
             <!-- الهيدر: يحتوي على السنة التنافسية وعداد الـ Live Score النقاط المباشر -->
             <div class="quiz-header">
                 <span id="exam-year">تحميل...</span>
+                <div id="streak-counter" class="streak-badge">🔥 × 0</div>
                 <div class="live-score-board">
                     <span class="score-tag correct-tag">✅ <strong id="live-correct">0</strong></span>
                     <span class="score-tag wrong-tag">❌ <strong id="live-wrong">0</strong></span>
@@ -122,21 +123,26 @@
                 <button id="next-btn" class="btn disabled" disabled>السؤال التالي</button>
             </div>
         </div>
-
-        <!-- 5. شاشة النتيجة النهائية (Result Screen) -->
-        <div id="result-screen" class="hidden">
-            <div class="result-card">
-                <div class="result-icon">🏆</div>
-                <h2>انتهى الاختبار!</h2>
-                <p class="result-text">لقد أكملت جلسة المذاكرة الحالية بنجاح.</p>
-                
-                <div class="score-box">
-                    <span class="score-label">درجتك النهائية:</span>
-                    <span id="final-score">0 / 0</span>
-                </div>
-                <button id="restart-btn" class="btn btn-success">العودة للقائمة الرئيسية 🏠</button>
-            </div>
+<!-- شاشة النتيجة النهائية المحدثة -->
+<div id="result-screen" class="hidden">
+    <div class="result-card">
+        <div class="result-icon">🏆</div>
+        <h2>انتهى الاختبار!</h2>
+        
+        <!-- إضافة حاوية النجوم والتقييم التحفيزي هنا -->
+        <div id="stars-rating" class="stars-container">⭐⭐⭐</div>
+        <div id="performance-text" class="performance-badge">أسطورة! 🏆</div>
+        
+        <p class="result-text">لقد أكملت جلسة المذاكرة الحالية بنجاح.</p>
+        
+        <div class="score-box">
+            <span class="score-label">درجتك النهائية:</span>
+            <span id="final-score">0 / 0</span>
         </div>
+        <button id="restart-btn" class="btn btn-success">العودة للقائمة الرئيسية 🏠</button>
+    </div>
+    </div>
+    
 
     </div>
 
@@ -156,5 +162,8 @@
     <!-- الأكواد البرمجية (ملف الأسئلة، وملف التوجيه والتحكم) -->
     <script src="exams.js"></script>
     <script src="app.js"></script>
+   <!-- عناصر التحفيز البصرية المنبثقة -->
+<div id="toast-msg" class="toast-notification">🔥 سلسلة رائعة! استمر</div>
+<canvas id="canvas-confetti" class="hidden"></canvas> 
 </body>
 </html>
