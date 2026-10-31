@@ -1,6 +1,6 @@
-// app.js - النظام المطور لإدارة مركز امتحانات منصة كلنا أحياء V2
+// app.js - نظام الامتحانات الاحترافي مع عناصر التحفيز (Gamification) لمنصة كلنا أحياء V2
 
-// 1. إعداد نظام المؤثرات الصوتية (برمجياً عبر الـ Web Audio API دون ملفات خارجية)
+// 1. نظام المؤثرات الصوتية برمجياً عبر الـ Web Audio API
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playSystemSound(type) {
     const osc = audioCtx.createOscillator();
@@ -29,22 +29,24 @@ function playSystemSound(type) {
     }
 }
 
-// 2. تعريف متغيرات الحالة العامة للتطبيق
+// 2. متغيرات الحالة العامة للتطبيق
 let filteredQuestions = [];
 let currentQuestionIndex = 0;
 let liveCorrectCount = 0;
 let liveWrongCount = 0;
+let streakCount = 0; // عداد السلسلة المتتالية
 let isAnswered = false;
 let selectedTopics = [];
+let confettiAnimationId = null;
 
-// 3. جلب عناصر الـ DOM للتحكم بالشاشات والواجهات
+// 3. جلب عناصر الـ DOM للتحكم بالواجهات والشاشات
 const resumeScreen = document.getElementById('resume-screen');
 const chaptersScreen = document.getElementById('chapters-screen');
 const topicsScreen = document.getElementById('topics-screen');
 const quizScreen = document.getElementById('quiz-screen');
 const resultScreen = document.getElementById('result-screen');
 
-// عناصر الامتحان الداخلي
+// عناصر الامتحان والعدادات
 const examYear = document.getElementById('exam-year');
 const questionCounter = document.getElementById('question-counter');
 const progressFill = document.getElementById('progress-fill');
@@ -53,12 +55,15 @@ const questionTopic = document.getElementById('question-topic');
 const optionsContainer = document.getElementById('options-container');
 const liveCorrect = document.getElementById('live-correct');
 const liveWrong = document.getElementById('live-wrong');
+const streakCounter = document.getElementById('streak-counter');
 
-// الأزرار والـ Modals
+// أزرار التحكم والـ Modals والعناصر التفاعلية
 const nextBtn = document.getElementById('next-btn');
 const skipBtn = document.getElementById('skip-btn');
 const activationModal = document.getElementById('activation-modal');
 const modalMessageText = document.getElementById('modal-message-text');
+const toastMsg = document.getElementById('toast-msg');
+const confettiCanvas = document.getElementById('canvas-confetti');
 
 // 4. نظام الحفظ التلقائي في الـ LocalStorage
 function saveProgress() {
@@ -66,6 +71,7 @@ function saveProgress() {
         index: currentQuestionIndex,
         correct: liveCorrectCount,
         wrong: liveWrongCount,
+        streak: streakCount,
         topics: selectedTopics
     };
     localStorage.setItem('kolona_ahya_save', JSON.stringify(sessionData));
@@ -88,18 +94,16 @@ function initApp() {
     quizScreen.classList.add('hidden');
     topicsScreen.classList.add('hidden');
     chaptersScreen.classList.remove('hidden');
-    
+    stopConfetti();
     setupChapterListeners();
 }
 
-// إعداد أحداث النقر للأبواب والأقفال
 function setupChapterListeners() {
     document.getElementById('chapter-reproduction').onclick = () => {
         playSystemSound('click');
         showTopicsScreen();
     };
 
-    // إدارة الأبواب المقفلة
     document.querySelectorAll('.chapter-card.locked').forEach(card => {
         card.onclick = () => {
             playSystemSound('wrong');
@@ -109,12 +113,11 @@ function setupChapterListeners() {
     });
 }
 
-// 6. شاشة تفريغ وتصفية المواضيع الدقيقة (Sub-Topics)
+// 6. شاشة تصفية المواضيع الدقيقة (Sub-Topics)
 function showTopicsScreen() {
     chaptersScreen.classList.add('hidden');
     topicsScreen.classList.remove('hidden');
     
-    // استخراج المواضيع الفرعية الفريدة من ملف البيانات تلقائياً
     const uniqueTopics = [...new Set(examsData.map(q => q.topic))];
     const container = document.getElementById('topics-list-container');
     container.innerHTML = '';
@@ -130,7 +133,7 @@ function showTopicsScreen() {
     });
 }
 
-// 7. تشغيل وبدء الامتحان بناءً على الفلترة والتصفية
+// 7. تشغيل وبدء الامتحان بناءً على التصفية والحفظ
 function startQuiz(isResuming = false) {
     if (isResuming) {
         const saved = JSON.parse(localStorage.getItem('kolona_ahya_save'));
@@ -138,8 +141,8 @@ function startQuiz(isResuming = false) {
         currentQuestionIndex = saved.index;
         liveCorrectCount = saved.correct;
         liveWrongCount = saved.wrong;
+        streakCount = saved.streak || 0;
     } else {
-        // جمع المواضيع المختارة من الـ Checkboxes
         const checkboxes = document.querySelectorAll('.topic-checkbox');
         selectedTopics = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
         
@@ -150,20 +153,38 @@ function startQuiz(isResuming = false) {
         currentQuestionIndex = 0;
         liveCorrectCount = 0;
         liveWrongCount = 0;
+        streakCount = 0;
     }
 
-    // فلترة المصفوفة الأساسية
     filteredQuestions = examsData.filter(q => selectedTopics.includes(q.topic));
     
-    // تحديث لوحة النقاط المباشرة بالواجهة
     liveCorrect.textContent = liveCorrectCount;
     liveWrong.textContent = liveWrongCount;
+    updateStreakDisplay();
 
     topicsScreen.classList.add('hidden');
     resumeScreen.classList.add('hidden');
     quizScreen.classList.remove('hidden');
     
     showQuestion();
+}
+
+// تحديث مظهر عداد السلسلة وإشعاله إذا لزم الأمر
+function updateStreakDisplay() {
+    streakCounter.textContent = `🔥 × ${streakCount}`;
+    if (streakCount >= 3) {
+        streakCounter.classList.add('streak-active');
+    } else {
+        streakCounter.classList.remove('streak-active');
+    }
+}
+
+// عرض رسالة الـ Toast المنبثقة (Duolingo Style)
+function showToastMessage() {
+    toastMsg.classList.add('show');
+    setTimeout(() => {
+        toastMsg.classList.remove('show');
+    }, 2000);
 }
 
 // 8. دورة عرض السؤال ومعالجة الإجابات والتخطي
@@ -198,7 +219,7 @@ function showQuestion() {
         optionsContainer.appendChild(card);
     });
     
-    saveProgress(); // حفظ خطوة خطوة في المتصفح
+    saveProgress();
 }
 
 function handleOptionSelection(card, selectedIndex, correctIndex) {
@@ -208,23 +229,31 @@ function handleOptionSelection(card, selectedIndex, correctIndex) {
     const cards = optionsContainer.getElementsByClassName('option-card');
     if (selectedIndex === correctIndex) {
         playSystemSound('correct');
-        card.classList.add('correct');
+        card.classList.add('correct', 'correct-pop');
         liveCorrectCount++;
         liveCorrect.textContent = liveCorrectCount;
+        
+        streakCount++;
+        if (streakCount === 3 || streakCount === 6 || streakCount === 10) {
+            showToastMessage();
+        }
     } else {
         playSystemSound('wrong');
         card.classList.add('wrong');
         cards[correctIndex].classList.add('correct');
         liveWrongCount++;
         liveWrong.textContent = liveWrongCount;
+        
+        streakCount = 0; // انقطاع السلسلة عند الخطأ
     }
 
+    updateStreakDisplay();
     nextBtn.classList.remove('disabled');
     nextBtn.disabled = false;
     saveProgress();
 }
 
-// تفعيل زر التخطي (لم ندرسه بعد) دون احتساب خطأ أو صواب
+// تفعيل زر التخطي (لم ندرسه بعد) دون كسر السلسلة أو التأثير على النقاط
 skipBtn.onclick = () => {
     playSystemSound('click');
     currentQuestionIndex++;
@@ -245,57 +274,10 @@ nextBtn.onclick = () => {
     }
 };
 
-// 9. إنهاء الامتحان وعرض النتيجة وتصفير الحفظ
+// 9. إنهاء الامتحان وعرض النتيجة والتقييم الذكي بالنجوم
 function showFinalResult() {
     quizScreen.classList.add('hidden');
     resultScreen.classList.remove('hidden');
     
-    // احتساب الدرجة الإجمالية بناءً على ما حله الطالب فعلياً (الصحيح من إجمالي الفلترة)
-    document.getElementById('final-score').textContent = `${liveCorrectCount} / ${filteredQuestions.length}`;
-    localStorage.removeItem('kolona_ahya_save'); // حذف الحفظ التلقائي لاكتمال الامتحان بنجاح
-}
-
-// 10. ربط أحداث أزرار التحكم بالشاشات والـ Modals
-document.getElementById('back-to-chapters').onclick = () => {
-    playSystemSound('click');
-    initApp();
-};
-
-document.getElementById('select-all-topics').onclick = () => {
-    playSystemSound('click');
-    const checkboxes = document.querySelectorAll('.topic-checkbox');
-    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-    checkboxes.forEach(cb => cb.checked = !allChecked);
-};
-document.getElementById('start-filtered-quiz').onclick = () => {
-    playSystemSound('click');
-    startQuiz(false);
-};
-
-document.getElementById('resume-btn').onclick = () => {
-    playSystemSound('click');
-    startQuiz(true);
-};
-// 11. تشغيل التطبيق عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', () => {
-    checkSavedProgress();
-});
-
-// ربط زر (البدء من جديد) في شاشة الاستئناف
-document.getElementById('clear-save-btn').onclick = () => {
-    playSystemSound('click');
-    localStorage.removeItem('kolona_ahya_save');
-    initApp();
-};
-
-// ربط زر (العودة للقائمة الرئيسية) في شاشة النتيجة
-document.getElementById('restart-btn').onclick = () => {
-    playSystemSound('click');
-    initApp();
-};
-
-// إغلاق نافذة التفعيل (Modal) عند الضغط على إلغاء
-document.getElementById('activate-close-btn').onclick = () => {
-    playSystemSound('click');
-    activationModal.classList.add('hidden');
-};
+    const scorePercentage = (liveCorrectCount / filteredQuestions.length) * 100;
+    
