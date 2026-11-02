@@ -37,6 +37,9 @@ let liveWrongCount = 0;
 let streakCount = 0; // عداد السلسلة المتتالية
 let isAnswered = false;
 let selectedTopics = [];
+let currentChapterData = typeof examsData !== 'undefined' ? examsData : []; 
+let currentChapterName = 'reproduction';
+let isGeneticsUnlocked = localStorage.getItem('kolona_ahya_genetics_unlocked') === 'true';
 let confettiAnimationId = null;
 
 // 3. جلب عناصر الـ DOM للتحكم بالواجهات والشاشات
