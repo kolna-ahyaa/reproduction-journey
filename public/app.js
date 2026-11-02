@@ -68,14 +68,14 @@ const modalMessageText = document.getElementById('modal-message-text');
 const toastMsg = document.getElementById('toast-msg');
 const confettiCanvas = document.getElementById('canvas-confetti');
 
-// 4. نظام الحفظ التلقائي في الـ LocalStorage
 function saveProgress() {
     const sessionData = {
         index: currentQuestionIndex,
         correct: liveCorrectCount,
         wrong: liveWrongCount,
         streak: streakCount,
-        topics: selectedTopics
+        topics: selectedTopics,
+        chapterName: currentChapterName // حفظ اسم الباب للاستئناف الصحيح
     };
     localStorage.setItem('kolona_ahya_save', JSON.stringify(sessionData));
 }
