@@ -144,12 +144,19 @@ function setupChapterListeners() {
 }
 
 
-// 6. شاشة تصفية المواضيع الدقيقة (Sub-Topics)
+// عرض المواضيع بناءً على الباب النشط حالياً
 function showTopicsScreen() {
     chaptersScreen.classList.add('hidden');
     topicsScreen.classList.remove('hidden');
     
-    const uniqueTopics = [...new Set(examsData.map(q => q.topic))];
+    // تعديل العنوان ديناميكياً حسب الباب الحالي
+    const topicsTitle = document.querySelector('#topics-screen h2');
+    if (topicsTitle) {
+        topicsTitle.textContent = currentChapterName === 'reproduction' ? "مواضيع باب التكاثر 📑" : "مواضيع باب الوراثة 📑";
+    }
+    
+    // استخراج المواضيع الفرعية الفريدة من الباب المختار حالياً
+    const uniqueTopics = [...new Set(currentChapterData.map(q => q.topic))];
     const container = document.getElementById('topics-list-container');
     container.innerHTML = '';
 
@@ -162,6 +169,45 @@ function showTopicsScreen() {
         `;
         container.appendChild(item);
     });
+}
+
+// بدء الامتحان المفلتر من الباب النشط
+function startQuiz(isResuming = false) {
+    if (isResuming) {
+        const saved = JSON.parse(localStorage.getItem('kolona_ahya_save'));
+        selectedTopics = saved.topics;
+        currentQuestionIndex = saved.index;
+        liveCorrectCount = saved.correct;
+        liveWrongCount = saved.wrong;
+        streakCount = saved.streak || 0;
+        currentChapterName = saved.chapterName || 'reproduction';
+        currentChapterData = currentChapterName === 'reproduction' ? examsData : geneticsData;
+    } else {
+        const checkboxes = document.querySelectorAll('.topic-checkbox');
+        selectedTopics = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+        
+        if (selectedTopics.length === 0) {
+            alert('الرجاء اختيار موضوع واحد على الأقل للمذاكرة!');
+            return;
+        }
+        currentQuestionIndex = 0;
+        liveCorrectCount = 0;
+        liveWrongCount = 0;
+        streakCount = 0;
+    }
+
+    // الفلترة تتم الآن من currentChapterData المختار بدلاً من examsData الثابتة
+    filteredQuestions = currentChapterData.filter(q => selectedTopics.includes(q.topic));
+    
+    liveCorrect.textContent = liveCorrectCount;
+    liveWrong.textContent = liveWrongCount;
+    updateStreakDisplay();
+
+    topicsScreen.classList.add('hidden');
+    resumeScreen.classList.add('hidden');
+    quizScreen.classList.remove('hidden');
+    
+    showQuestion();
 }
 
 // 7. تشغيل وبدء الامتحان بناءً على التصفية والحفظ
