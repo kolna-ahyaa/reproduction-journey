@@ -102,19 +102,47 @@ function initApp() {
 }
 
 function setupChapterListeners() {
+    // 1. عند الضغط على باب التكاثر
     document.getElementById('chapter-reproduction').onclick = () => {
         playSystemSound('click');
+        currentChapterData = examsData;
+        currentChapterName = 'reproduction';
         showTopicsScreen();
     };
 
-    document.querySelectorAll('.chapter-card.locked').forEach(card => {
-        card.onclick = () => {
-            playSystemSound('wrong');
-            modalMessageText.textContent = card.getAttribute('data-msg');
-            activationModal.classList.remove('hidden');
+    // 2. عند الضغط على باب الوراثة
+    const geneticsCard = document.getElementById('chapter-genetics') || document.querySelector('.chapter-card.locked');
+    if (geneticsCard) {
+        geneticsCard.onclick = () => {
+            if (isGeneticsUnlocked) {
+                // إذا كان الباب مفتوحاً، انقل الطالب لصفحة المواضيع الخاصة بالوراثة
+                playSystemSound('click');
+                currentChapterData = geneticsData;
+                currentChapterName = 'genetics';
+                showTopicsScreen();
+            } else {
+                // إذا كان مقفلاً، سنفعل منطق القفل والواتساب في الخطوة الثالثة
+                playSystemSound('wrong');
+                // حالياً تظهر النافذة القديمة لحين الانتقال للخطوات القادمة
+                if (typeof activationModal !== 'undefined' && activationModal) {
+                    modalMessageText.textContent = "هذا الباب يتطلب كود تفعيل لتشغيله";
+                    activationModal.classList.remove('hidden');
+                }
+            }
         };
+    }
+
+    // 3. باب النظام البيئي (سنعدله في الخطوة الرابعة)
+    document.querySelectorAll('.chapter-card.locked').forEach(card => {
+        if (card !== geneticsCard) {
+            card.onclick = () => {
+                playSystemSound('wrong');
+                alert("باب النظام البيئي قريباً! 🌿");
+            };
+        }
     });
 }
+
 
 // 6. شاشة تصفية المواضيع الدقيقة (Sub-Topics)
 function showTopicsScreen() {
