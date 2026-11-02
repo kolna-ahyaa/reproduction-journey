@@ -210,41 +210,6 @@ function startQuiz(isResuming = false) {
     showQuestion();
 }
 
-// 7. تشغيل وبدء الامتحان بناءً على التصفية والحفظ
-function startQuiz(isResuming = false) {
-    if (isResuming) {
-        const saved = JSON.parse(localStorage.getItem('kolona_ahya_save'));
-        selectedTopics = saved.topics;
-        currentQuestionIndex = saved.index;
-        liveCorrectCount = saved.correct;
-        liveWrongCount = saved.wrong;
-        streakCount = saved.streak || 0;
-    } else {
-        const checkboxes = document.querySelectorAll('.topic-checkbox');
-        selectedTopics = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
-        
-        if (selectedTopics.length === 0) {
-            alert('الرجاء اختيار موضوع واحد على الأقل للمذاكرة!');
-            return;
-        }
-        currentQuestionIndex = 0;
-        liveCorrectCount = 0;
-        liveWrongCount = 0;
-        streakCount = 0;
-    }
-
-    filteredQuestions = examsData.filter(q => selectedTopics.includes(q.topic));
-    
-    liveCorrect.textContent = liveCorrectCount;
-    liveWrong.textContent = liveWrongCount;
-    updateStreakDisplay();
-
-    topicsScreen.classList.add('hidden');
-    resumeScreen.classList.add('hidden');
-    quizScreen.classList.remove('hidden');
-    
-    showQuestion();
-}
 
 // تحديث مظهر عداد السلسلة وإشعاله إذا لزم الأمر
 function updateStreakDisplay() {
