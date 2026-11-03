@@ -439,3 +439,12 @@ document.getElementById('activate-close-btn').onclick = () => {
 document.addEventListener('DOMContentLoaded', () => {
     checkSavedProgress();
 });    
+// زر العودة من شاشة الدفع
+const backToMenuBtn = document.getElementById('back-to-menu-btn');
+if (backToMenuBtn) {
+    backToMenuBtn.onclick = () => {
+        playSystemSound('click');
+        localStorage.removeItem('kolona_ahya_save');
+        initApp();
+    };
+}
