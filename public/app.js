@@ -48,6 +48,7 @@ const chaptersScreen = document.getElementById('chapters-screen');
 const topicsScreen = document.getElementById('topics-screen');
 const quizScreen = document.getElementById('quiz-screen');
 const resultScreen = document.getElementById('result-screen');
+const paywallScreen = document.getElementById('paywall-screen');
 
 // عناصر الامتحان والعدادات
 const examYear = document.getElementById('exam-year');
