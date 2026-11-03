@@ -97,6 +97,7 @@ function initApp() {
     resultScreen.classList.add('hidden');
     quizScreen.classList.add('hidden');
     topicsScreen.classList.add('hidden');
+    paywallScreen.classList.add('hidden');
     chaptersScreen.classList.remove('hidden');
     stopConfetti();
     setupChapterListeners();
