@@ -41,6 +41,9 @@ let currentChapterData = typeof examsData !== 'undefined' ? examsData : [];
 let currentChapterName = 'reproduction';
 let isGeneticsUnlocked = localStorage.getItem('kolona_ahya_genetics_unlocked') === 'true';
 let confettiAnimationId = null;
+// متغيرات حالة الاشتراك (Subscription State)
+let isSubscribed = localStorage.getItem('kolona_subscribed') === 'true';
+let subscriptionExpiry = localStorage.getItem('kolona_subscription_expiry') || null;
 
 // 3. جلب عناصر الـ DOM للتحكم بالواجهات والشاشات
 const resumeScreen = document.getElementById('resume-screen');
