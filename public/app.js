@@ -601,3 +601,10 @@ if (document.getElementById('student-cancel-code-btn')) {
         document.getElementById('student-code-modal').classList.add('hidden');
     };
         }
+const geneticsLockBackBtn = document.getElementById('genetics-lock-back-btn');
+if (geneticsLockBackBtn) {
+    geneticsLockBackBtn.onclick = () => {
+        playSystemSound('click');
+        initApp();
+    };
+}
