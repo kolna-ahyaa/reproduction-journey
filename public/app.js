@@ -458,3 +458,12 @@ if (backToMenuBtn) {
         initApp();
     };
 }
+// دالة تفعيل الاشتراك (تُستدعى عند إدخال كود صحيح)
+function activateSubscription(expiryDate) {
+    isSubscribed = true;
+    subscriptionExpiry = expiryDate;
+    localStorage.setItem('kolona_subscribed', 'true');
+    localStorage.setItem('kolona_subscription_expiry', expiryDate);
+    alert("🎉 تم تفعيل الاشتراك بنجاح! استمتع بجميع الأبواب.");
+    initApp(); // العودة للقائمة الرئيسية
+    }
