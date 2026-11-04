@@ -467,3 +467,137 @@ function activateSubscription(expiryDate) {
     alert("🎉 تم تفعيل الاشتراك بنجاح! استمتع بجميع الأبواب.");
     initApp(); // العودة للقائمة الرئيسية
     }
+// ==========================================
+// 12. نظام لوحة الأدمن وتوليد الأكواد
+// ==========================================
+
+// متغيرات لوحة الأدمن
+let adminClickCount = 0;
+let adminClickTimer = null;
+const ADMIN_PASSWORD = "0907840150";
+
+// 1. فتح لوحة الأدمن بالضغط 5 مرات على العنوان
+const mainTitle = document.querySelector('#chapters-screen h1');
+if (mainTitle) {
+    mainTitle.addEventListener('click', () => {
+        adminClickCount++;
+        if (adminClickCount === 1) {
+            adminClickTimer = setTimeout(() => { adminClickCount = 0; }, 2000); // تصفير العداد بعد ثانيتين
+        }
+        if (adminClickCount >= 5) {
+            clearTimeout(adminClickTimer);
+            adminClickCount = 0;
+            document.getElementById('admin-auth-modal').classList.remove('hidden');
+        }
+    });
+}
+
+// 2. التحقق من كلمة المرور
+const adminLoginBtn = document.getElementById('admin-login-btn');
+if (adminLoginBtn) {
+    adminLoginBtn.onclick = () => {
+        const pass = document.getElementById('admin-pass-input').value;
+        if (pass === ADMIN_PASSWORD) {
+            document.getElementById('admin-auth-modal').classList.add('hidden');
+            document.getElementById('admin-pass-input').value = '';
+            document.getElementById('admin-panel').classList.remove('hidden');
+            // تعيين تاريخ افتراضي (15 مايو 2027)
+            document.getElementById('admin-expiry-date').value = "2027-05-15";
+        } else {
+            alert("كلمة المرور خاطئة!");
+        }
+    };
+}
+
+// 3. توليد الكود
+const generateCodeBtn = document.getElementById('generate-code-btn');
+if (generateCodeBtn) {
+    generateCodeBtn.onclick = () => {
+        const dateVal = document.getElementById('admin-expiry-date').value; // YYYY-MM-DD
+        if (!dateVal) return alert("اختر تاريخ الانتهاء أولاً");
+
+        // تحويل التاريخ إلى صيغة YYMMDD
+        const dateObj = new Date(dateVal);
+        const yy = String(dateObj.getFullYear()).slice(-2);
+        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const dd = String(dateObj.getDate()).padStart(2, '0');
+        const dateStr = `${yy}${mm}${dd}`;
+
+        // توليد رقم تحقق عشوائي (حرفين)
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const checksum = chars.charAt(Math.floor(Math.random() * 26)) + chars.charAt(Math.floor(Math.random() * 26));
+        
+        const code = `V2-${dateStr}-${checksum}`;
+
+        document.getElementById('generated-code-text').textContent = code;
+        document.getElementById('generated-code-box').classList.remove('hidden');
+    };
+}
+
+// 4. نسخ الكود
+const copyCodeBtn = document.getElementById('copy-code-btn');
+if (copyCodeBtn) {
+    copyCodeBtn.onclick = () => {
+        const codeText = document.getElementById('generated-code-text').textContent;
+        navigator.clipboard.writeText(codeText).then(() => {
+            alert("📋 تم نسخ الكود!");
+        });
+    };
+}
+
+// إغلاق اللوحة
+document.getElementById('admin-cancel-btn').onclick = () => document.getElementById('admin-auth-modal').classList.add('hidden');
+document.getElementById('admin-close-panel-btn').onclick = () => document.getElementById('admin-panel').classList.add('hidden');
+
+
+// 5. شاشة إدخال الكود للطالب
+// ربط الزر الذي يفتح شاشة إدخال الكود (سنستخدم زر الواتساب في شاشة القفل ونضيف بجانبه زر إدخال الكود)
+const studentSubmitBtn = document.getElementById('student-submit-code-btn');
+if (studentSubmitBtn) {
+    studentSubmitBtn.onclick = () => {
+        const code = document.getElementById('student-code-input').value.trim().toUpperCase();
+        const errorDiv = document.getElementById('student-code-error');
+        
+        // التحقق من الصيغة: V2-YYMMDD-XX
+        const regex = /^V2-(\d{2})(\d{2})(\d{2})-[A-Z]{2}$/;
+        const match = code.match(regex);
+
+        if (!match) {
+            errorDiv.textContent = "صيغة الكود غير صحيحة.";
+            return;
+        }
+
+        const yy = match[1];
+        const mm = match[2];
+        const dd = match[3];
+        const expiryDate = `20${yy}-${mm}-${dd}`; // YYYY-MM-DD
+
+        // التحقق من التاريخ
+        const today = new Date();
+        const expiry = new Date(expiryDate);
+
+        if (isNaN(expiry.getTime())) {
+            errorDiv.textContent = "تاريخ الكود غير صالح.";
+            return;
+        }
+
+        if (today > expiry) {
+            errorDiv.textContent = "عذراً، هذا الكود انتهت صلاحيته.";
+            return;
+        }
+
+        // إذا كان كل شيء صحيحاً
+        document.getElementById('student-code-modal').classList.add('hidden');
+        document.getElementById('student-code-input').value = '';
+        errorDiv.textContent = '';
+        
+        // تفعيل الاشتراك
+        activateSubscription(expiryDate);
+    };
+}
+
+if (document.getElementById('student-cancel-code-btn')) {
+    document.getElementById('student-cancel-code-btn').onclick = () => {
+        document.getElementById('student-code-modal').classList.add('hidden');
+    };
+        }
