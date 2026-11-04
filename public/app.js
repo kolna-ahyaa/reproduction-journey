@@ -96,6 +96,16 @@ function checkSavedProgress() {
 
 // 5. تهيئة التطبيق الأساسي وعرض الأبواب
 function initApp() {
+// فحص تاريخ انتهاء الاشتراك
+if (isSubscribed && subscriptionExpiry) {
+    if (new Date() > new Date(subscriptionExpiry)) {
+        localStorage.removeItem('kolona_subscribed');
+        localStorage.removeItem('kolona_subscription_expiry');
+        isSubscribed = false;
+        alert("انتهت صلاحية اشتراكك. يرجى التجديد للاستمرار.");
+    }
+        }  
+    
     resumeScreen.classList.add('hidden');
     resultScreen.classList.add('hidden');
     quizScreen.classList.add('hidden');
