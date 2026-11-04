@@ -247,7 +247,7 @@ function showToastMessage() {
 // 8. دورة عرض السؤال ومعالجة الإجابات والتخطي
 function showQuestion() {
  // فخ الـ 60 سؤالاً (Paywall)
-if (currentChapterName === 'reproduction' && currentQuestionIndex === 60) {
+if (!isSubscribed && currentChapterName === 'reproduction' && currentQuestionIndex === 60) {
     quizScreen.classList.add('hidden');
     paywallScreen.classList.remove('hidden');
     return;
