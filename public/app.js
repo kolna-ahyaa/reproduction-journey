@@ -129,22 +129,18 @@ function setupChapterListeners() {
     const geneticsCard = document.getElementById('chapter-genetics') || document.querySelector('.chapter-card.locked');
     if (geneticsCard) {
         geneticsCard.onclick = () => {
-            if (isGeneticsUnlocked) {
-                // إذا كان الباب مفتوحاً، انقل الطالب لصفحة المواضيع الخاصة بالوراثة
-                playSystemSound('click');
-                currentChapterData = geneticsData;
-                currentChapterName = 'genetics';
-                showTopicsScreen();
-            } else {
-                // إذا كان مقفلاً، سنفعل منطق القفل والواتساب في الخطوة الثالثة
-                playSystemSound('wrong');
-                // حالياً تظهر النافذة القديمة لحين الانتقال للخطوات القادمة
-                if (typeof activationModal !== 'undefined' && activationModal) {
-                    modalMessageText.textContent = "هذا الباب يتطلب كود تفعيل لتشغيله";
-                    activationModal.classList.remove('hidden');
-                }
-            }
-        };
+    if (isSubscribed) {
+        // إذا كان مشتركاً، افتح الباب مباشرة
+        playSystemSound('click');
+        currentChapterData = geneticsData;
+        currentChapterName = 'genetics';
+        showTopicsScreen();
+    } else {
+        // إذا لم يكن مشتركاً، أظهر رسالة الواتساب
+        playSystemSound('wrong');
+        alert("باب الوراثة يتطلب اشتراكاً. تواصل معنا عبر الواتساب لتفعيل الاشتراك.");
+    }
+};
     }
 
     // 3. باب النظام البيئي (سنعدله في الخطوة الرابعة)
