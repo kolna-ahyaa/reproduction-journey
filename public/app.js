@@ -105,7 +105,30 @@ if (isSubscribed && subscriptionExpiry) {
         isSubscribed = false;
         alert("انتهت صلاحية اشتراكك. يرجى التجديد للاستمرار.");
     }
-        }  
+  }  
+    
+    // تحديث شكل بطاقة الوراثة بناءً على حالة الاشتراك
+const geneticsCardElement = document.getElementById('chapter-genetics');
+if (geneticsCardElement) {
+    const statusBadge = geneticsCardElement.querySelector('.status-badge');
+    if (isSubscribed) {
+        // إذا كان مشتركاً، اجعل البطاقة مفتوحة
+        geneticsCardElement.classList.remove('locked');
+        geneticsCardElement.classList.add('open');
+        if (statusBadge) {
+            statusBadge.className = 'status-badge status-open';
+            statusBadge.innerHTML = 'مفتوح ✨';
+        }
+    } else {
+        // إذا لم يكن مشتركاً، اجعل البطاقة مقفلة
+        geneticsCardElement.classList.add('locked');
+        geneticsCardElement.classList.remove('open');
+        if (statusBadge) {
+            statusBadge.className = 'status-badge status-locked';
+            statusBadge.innerHTML = '🔒 مقفل';
+        }
+    }
+}
     
     resumeScreen.classList.add('hidden');
     resultScreen.classList.add('hidden');
