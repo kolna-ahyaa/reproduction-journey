@@ -142,6 +142,21 @@
         <button id="restart-btn" class="btn btn-success">العودة للقائمة الرئيسية 🏠</button>
     </div>
     </div>
+        
+        <!-- 7. شاشة قفل باب الوراثة (Genetics Lock Screen) -->
+<div id="genetics-lock-screen" class="hidden">
+    <div class="result-card">
+        <div class="screen-icon">🔒</div>
+        <h2>باب الوراثة مقفول!</h2>
+        <p class="result-text">لفتح باب الوراثة كاملاً (100 سؤال) + باقي أسئلة التكاثر، اشترك الآن بـ 3000 جنيه.</p>
+        <div class="button-group">
+            <a href="https://wa.me/211981084919?text=السلام%20عليكم،%20أريد%20فتح%20باب%20الوراثة" target="_blank" class="btn btn-success" style="text-decoration: none;">اشترك الآن عبر واتساب 💬</a>
+            <button onclick="document.getElementById('student-code-modal').classList.remove('hidden')" class="btn btn-primary" style="margin-top:10px;">لدي كود تفعيل 🔑</button>
+            <button id="genetics-lock-back-btn" class="btn btn-secondary" style="margin-top:10px;">العودة للقائمة 🏠</button>
+        </div>
+    </div>
+</div>
+        
  <!-- شاشة طلب الاشتراك (Paywall Screen) -->
 <div id="paywall-screen" class="hidden">
     <div class="result-card">
@@ -158,19 +173,6 @@
 
     </div>
     
-<!-- 7. شاشة قفل باب الوراثة (Genetics Lock Screen) -->
-<div id="genetics-lock-screen" class="hidden">
-    <div class="result-card">
-        <div class="screen-icon">🔒</div>
-        <h2>باب الوراثة مقفول!</h2>
-        <p class="result-text">لفتح باب الوراثة كاملاً (100 سؤال) + باقي أسئلة التكاثر، اشترك الآن بـ 3000 جنيه.</p>
-        <div class="button-group">
-            <a href="https://wa.me/211981084919?text=السلام%20عليكم،%20أريد%20فتح%20باب%20الوراثة" target="_blank" class="btn btn-success" style="text-decoration: none;">اشترك الآن عبر واتساب 💬</a>
-            <button onclick="document.getElementById('student-code-modal').classList.remove('hidden')" class="btn btn-primary" style="margin-top:10px;">لدي كود تفعيل 🔑</button>
-            <button id="genetics-lock-back-btn" class="btn btn-secondary" style="margin-top:10px;">العودة للقائمة 🏠</button>
-        </div>
-    </div>
-    </div>
     
     <!-- النافذة المنبثقة للأبواب المقفلة (Modal) -->
     <div id="activation-modal" class="modal-overlay hidden">
