@@ -127,23 +127,23 @@ function setupChapterListeners() {
     };
 
     // 2. عند الضغط على باب الوراثة
-    const geneticsCard = document.getElementById('chapter-genetics') || document.querySelector('.chapter-card.locked');
-    if (geneticsCard) {
-        geneticsCard.onclick = () => {
-    if (isSubscribed) {
-        // إذا كان مشتركاً، افتح الباب مباشرة
-        playSystemSound('click');
-        currentChapterData = geneticsData;
-        currentChapterName = 'genetics';
-        showTopicsScreen();
-    } else {
-        // إذا لم يكن مشتركاً، أظهر شاشة القفل (وليس التنبيه)
-        playSystemSound('wrong');
-        chaptersScreen.classList.add('hidden');
-        document.getElementById('genetics-lock-screen').classList.remove('hidden');
-    }
-};
-    }
+    const geneticsCard = document.getElementById('chapter-genetics');
+if (geneticsCard) {
+    geneticsCard.onclick = () => {
+        if (isSubscribed) {
+            // إذا كان مشتركاً، افتح الباب مباشرة
+            playSystemSound('click');
+            currentChapterData = geneticsData;
+            currentChapterName = 'genetics';
+            showTopicsScreen();
+        } else {
+            // إذا لم يكن مشتركاً، أظهر شاشة القفل
+            playSystemSound('wrong');
+            chaptersScreen.classList.add('hidden');
+            document.getElementById('genetics-lock-screen').classList.remove('hidden');
+        }
+    }; // إغلاق دالة onClick
+} // إغلاق شرط if (geneticsCard)
 
     // 3. باب النظام البيئي (سنعدله في الخطوة الرابعة)
     document.querySelectorAll('.chapter-card.locked').forEach(card => {
