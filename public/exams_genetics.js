@@ -1,4 +1,5 @@
 // exams_genetics.js - الباب الثاني: الوراثة (أول 20 سؤالاً)
+window.onerror = function(msg) { alert("خطأ في ملف الوراثة: " + msg); return false; };
 const geneticsData = [
   {
     id: 1,
