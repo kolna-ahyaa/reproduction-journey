@@ -136,9 +136,10 @@ function setupChapterListeners() {
         currentChapterName = 'genetics';
         showTopicsScreen();
     } else {
-        // إذا لم يكن مشتركاً، أظهر رسالة الواتساب
+        // إذا لم يكن مشتركاً، أظهر شاشة القفل (وليس التنبيه)
         playSystemSound('wrong');
-        alert("باب الوراثة يتطلب اشتراكاً. تواصل معنا عبر الواتساب لتفعيل الاشتراك.");
+        chaptersScreen.classList.add('hidden');
+        document.getElementById('genetics-lock-screen').classList.remove('hidden');
     }
 };
     }
