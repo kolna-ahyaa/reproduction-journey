@@ -535,7 +535,7 @@ const geneticsData = [
     answer: 0, // صح
     image: null
   },
-
+  {
   id: 40,
     year: "الشهادة الثانوية - 2014م",
     topic: "الهندسة الوراثية",
@@ -544,7 +544,7 @@ const geneticsData = [
     answer: 0, // صح
     image: null
   }, 
-  {
+  
   // exams_genetics.js - الدفعة الثالثة من باب الوراثة (الأسئلة من 41 إلى 60)
   {
     id: 41,
