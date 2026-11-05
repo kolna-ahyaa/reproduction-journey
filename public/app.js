@@ -1,4 +1,5 @@
 // app.js - نظام الامتحانات الاحترافي مع عناصر التحفيز (Gamification) لمنصة كلنا أحياء V2
+window.onerror = function(msg) { alert("خطأ: " + msg); return false; };
 
 // 1. نظام المؤثرات الصوتية برمجياً عبر الـ Web Audio API
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
