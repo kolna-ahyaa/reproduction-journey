@@ -135,6 +135,7 @@ if (geneticsCardElement) {
     quizScreen.classList.add('hidden');
     topicsScreen.classList.add('hidden');
     paywallScreen.classList.add('hidden');
+    document.getElementById('genetics-lock-screen').classList.add('hidden');
     chaptersScreen.classList.remove('hidden');
     stopConfetti();
     setupChapterListeners();
