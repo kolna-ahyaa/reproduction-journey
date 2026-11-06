@@ -1,4 +1,5 @@
 // exams.js - الجزء الأول (أول 20 سؤالاً)
+window.onerror = function(msg) { alert("خطأ في ملف التكاثر: " + msg); return false; };
 const examsData = [
   {
     id: 1,
