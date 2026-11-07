@@ -1,4 +1,4 @@
-devices async function onRequestGet(context) {
+export async function onRequestGet(context) {
   const { env } = context;
   const kv = env.GAME_ANALYTICS;
   if (!kv) return new Response("KV not bound", { status: 500 });
