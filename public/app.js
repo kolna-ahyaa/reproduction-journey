@@ -578,49 +578,54 @@ document.getElementById('admin-close-panel-btn').onclick = () => document.getEle
 
 // 5. شاشة إدخال الكود للطالب
 // ربط الزر الذي يفتح شاشة إدخال الكود (سنستخدم زر الواتساب في شاشة القفل ونضيف بجانبه زر إدخال الكود)
-const studentSubmitBtn = document.getElementById('student-submit-code-btn');
 if (studentSubmitBtn) {
-    studentSubmitBtn.onclick = () => {
+    studentSubmitBtn.onclick = async () => {
         const code = document.getElementById('student-code-input').value.trim().toUpperCase();
         const errorDiv = document.getElementById('student-code-error');
         
-        // التحقق من الصيغة: V2-YYMMDD-XX
-        const regex = /^V2-(\d{2})(\d{2})(\d{2})-[A-Z]{2}$/;
-        const match = code.match(regex);
-
-        if (!match) {
-            errorDiv.textContent = "صيغة الكود غير صحيحة.";
+        if (!code) {
+            errorDiv.textContent = "الرجاء إدخال الكود.";
             return;
         }
 
-        const yy = match[1];
-        const mm = match[2];
-        const dd = match[3];
-        const expiryDate = `20${yy}-${mm}-${dd}`; // YYYY-MM-DD
+        // تغيير حالة الزر إلى "جاري التحقق"
+        errorDiv.style.color = "#eab308"; // لون أصفر
+        errorDiv.textContent = "جاري التحقق من الكود...";
+        studentSubmitBtn.disabled = true;
 
-        // التحقق من التاريخ
-        const today = new Date();
-        const expiry = new Date(expiryDate);
+        try {
+            // إرسال الكود إلى الخادم (Cloudflare Function)
+            const response = await fetch('/api/validate-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: code })
+            });
 
-        if (isNaN(expiry.getTime())) {
-            errorDiv.textContent = "تاريخ الكود غير صالح.";
-            return;
+            const result = await response.json();
+
+            if (result.valid) {
+                // الكود صحيح (الخادم تحقق منه وشطبه)
+                document.getElementById('student-code-modal').classList.add('hidden');
+                document.getElementById('student-code-input').value = '';
+                errorDiv.textContent = '';
+                errorDiv.style.color = "#ef4444"; // إعادة اللون الأصلي
+
+                // تفعيل الاشتراك محلياً (الخادم هو من تحقق من التاريخ الحقيقي)
+                activateSubscription('2099-12-31'); 
+            } else {
+                // الكود غير صحيح أو مستخدم مسبقاً
+                errorDiv.style.color = "#ef4444"; // لون أحمر
+                errorDiv.textContent = result.reason || "الكود غير صالح.";
+            }
+        } catch (err) {
+            errorDiv.style.color = "#ef4444";
+            errorDiv.textContent = "خطأ في الاتصال بالخادم. تأكد من اتصالك بالإنترنت.";
+        } finally {
+            // إعادة تفعيل الزر
+            studentSubmitBtn.disabled = false;
         }
-
-        if (today > expiry) {
-            errorDiv.textContent = "عذراً، هذا الكود انتهت صلاحيته.";
-            return;
-        }
-
-        // إذا كان كل شيء صحيحاً
-        document.getElementById('student-code-modal').classList.add('hidden');
-        document.getElementById('student-code-input').value = '';
-        errorDiv.textContent = '';
-        
-        // تفعيل الاشتراك
-        activateSubscription(expiryDate);
     };
-}
+    }
 
 if (document.getElementById('student-cancel-code-btn')) {
     document.getElementById('student-cancel-code-btn').onclick = () => {
