@@ -538,27 +538,56 @@ if (adminLoginBtn) {
 // 3. توليد الكود
 const generateCodeBtn = document.getElementById('generate-code-btn');
 if (generateCodeBtn) {
-    generateCodeBtn.onclick = () => {
-        const dateVal = document.getElementById('admin-expiry-date').value; // YYYY-MM-DD
+    generateCodeBtn.onclick = async () => {
+        const dateVal = document.getElementById('admin-expiry-date').value;
         if (!dateVal) return alert("اختر تاريخ الانتهاء أولاً");
 
-        // تحويل التاريخ إلى صيغة YYMMDD
         const dateObj = new Date(dateVal);
+        dateObj.setHours(23, 59, 59, 999); // ينتهي الكود في نهاية اليوم المحدد
+        const expiryTimestamp = dateObj.getTime();
+
         const yy = String(dateObj.getFullYear()).slice(-2);
         const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
         const dd = String(dateObj.getDate()).padStart(2, '0');
         const dateStr = `${yy}${mm}${dd}`;
 
-        // توليد رقم تحقق عشوائي (حرفين)
         const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         const checksum = chars.charAt(Math.floor(Math.random() * 26)) + chars.charAt(Math.floor(Math.random() * 26));
-        
         const code = `V2-${dateStr}-${checksum}`;
 
-        document.getElementById('generated-code-text').textContent = code;
-        document.getElementById('generated-code-box').classList.remove('hidden');
+        // تغيير حالة الزر لمنع الضغط المتكرر
+        generateCodeBtn.disabled = true;
+        generateCodeBtn.textContent = "جاري الحفظ...";
+
+        try {
+            // إرسال الكود إلى الخادم (Cloudflare Function)
+            const response = await fetch('/api/generate-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    code: code,
+                    expiryTimestamp: expiryTimestamp,
+                    adminPassword: ADMIN_PASSWORD // تأكد أن هذا المتغير معرف في أعلى الملف
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                document.getElementById('generated-code-text').textContent = code;
+                document.getElementById('generated-code-box').classList.remove('hidden');
+            } else {
+                alert("خطأ: " + result.error);
+            }
+        } catch (err) {
+            alert("خطأ في الاتصال بالخادم. تأكد من اتصالك بالإنترنت.");
+        } finally {
+            // إعادة تفعيل الزر
+            generateCodeBtn.disabled = false;
+            generateCodeBtn.textContent = "توليد الكود 🎲";
+        }
     };
-}
+        }
 
 // 4. نسخ الكود
 const copyCodeBtn = document.getElementById('copy-code-btn');
