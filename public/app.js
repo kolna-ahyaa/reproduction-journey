@@ -578,6 +578,7 @@ document.getElementById('admin-close-panel-btn').onclick = () => document.getEle
 
 // 5. شاشة إدخال الكود للطالب
 // ربط الزر الذي يفتح شاشة إدخال الكود (سنستخدم زر الواتساب في شاشة القفل ونضيف بجانبه زر إدخال الكود)
+const studentSubmitBtn = document.getElementById('student-submit-code-btn');
 if (studentSubmitBtn) {
     studentSubmitBtn.onclick = async () => {
         const code = document.getElementById('student-code-input').value.trim().toUpperCase();
